@@ -50,8 +50,8 @@ export function ThemeProvider({ children }) {
           clipPath: clipPath,
         },
         {
-          duration: 550,
-          easing: 'cubic-bezier(0.2, 0.9, 0.4, 1)',
+          duration: 900,
+          easing: 'cubic-bezier(0.4, 0, 0.15, 1)',
           pseudoElement: '::view-transition-new(root)',
         }
       );
