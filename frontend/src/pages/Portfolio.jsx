@@ -127,18 +127,21 @@ export const DEFAULT_CONFIG = {
     ],
   },
   skills: [
-    { icon: "🟢", name: "Node.js", level: "Expert", cat: "Backend" },
+    { icon: "🌐", name: "HTML5", level: "Expert", cat: "Frontend" },
+    { icon: "🎨", name: "CSS3", level: "Expert", cat: "Frontend" },
+    { icon: "⚡", name: "JavaScript", level: "Expert", cat: "Frontend" },
     { icon: "⚛️", name: "React.js", level: "Expert", cat: "Frontend" },
     { icon: "▲", name: "Next.js", level: "Advanced", cat: "Frontend" },
-    { icon: "🐘", name: "PostgreSQL", level: "Advanced", cat: "Database" },
-    { icon: "🍃", name: "MongoDB", level: "Intermediate", cat: "Database" },
     { icon: "🔷", name: "TypeScript", level: "Advanced", cat: "Frontend" },
+    { icon: "🟢", name: "Node.js", level: "Expert", cat: "Backend" },
     { icon: "📡", name: "REST APIs", level: "Expert", cat: "Backend" },
     { icon: "🔌", name: "Socket.io", level: "Advanced", cat: "Backend" },
+    { icon: "🔐", name: "JWT / Auth", level: "Expert", cat: "Backend" },
+    { icon: "🐘", name: "PostgreSQL", level: "Advanced", cat: "Database" },
+    { icon: "🍃", name: "MongoDB", level: "Intermediate", cat: "Database" },
+    { icon: "🐙", name: "Git/GitHub", level: "Expert", cat: "DevOps" },
     { icon: "🐋", name: "Docker", level: "Intermediate", cat: "DevOps" },
     { icon: "☁️", name: "AWS", level: "Intermediate", cat: "DevOps" },
-    { icon: "🔐", name: "JWT / Auth", level: "Expert", cat: "Backend" },
-    { icon: "🐙", name: "Git/GitHub", level: "Expert", cat: "DevOps" },
   ],
   experience: [
     {
@@ -343,7 +346,7 @@ export default function Portfolio() {
         .pf-stat       { animation: countUp .5s ease both; }
         .pf-stat:nth-child(2){ animation-delay:.1s }
         .pf-stat:nth-child(3){ animation-delay:.2s }
-        .skill-card-v2:hover { transform:translateY(-4px)!important; }
+        .skill-card-v2:hover { transform:translateY(-5px)!important; box-shadow: 0 12px 28px -6px rgba(0,0,0,0.12)!important; }
         .proj-card-v2:hover  { transform:translateY(-6px)!important; box-shadow:var(--shadow-lg)!important; }
         .proj-card-v2:hover .proj-top-bar { opacity:1!important; }
         .contact-link-item:hover { transform:translateX(6px)!important; border-color:var(--primary)!important; }
@@ -360,7 +363,91 @@ export default function Portfolio() {
 
         .btn-hero-outline:hover { border-color:var(--primary)!important; background:var(--primary-lt)!important; color:var(--primary)!important; }
         .social-btn-v2:hover { border-color:var(--primary)!important; color:var(--primary)!important; transform:translateY(-3px)!important; }
-        .highlight-card-v2:hover { border-color:var(--primary)!important; }
+        .highlight-card-v2:hover { border-color:var(--primary)!important; transform:translateY(-3px)!important; }
+
+        /* ── Traveling Edge Progress Bar & Shimmer Motion ── */
+        @keyframes edgeBeamSpin {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes progressShimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(250%); }
+        }
+
+        .edge-beam-card {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+        }
+
+        .card-border-beam {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1.5px;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          pointer-events: none;
+          z-index: 3;
+          overflow: hidden;
+          opacity: 0.85;
+          transition: opacity 0.3s ease;
+        }
+
+        .card-border-beam::before {
+          content: '';
+          position: absolute;
+          top: -150%;
+          left: -150%;
+          width: 400%;
+          height: 400%;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 270deg,
+            var(--beam-color, var(--primary)) 330deg,
+            #ffffff 355deg,
+            var(--beam-color, var(--primary)) 360deg
+          );
+          animation: edgeBeamSpin 4.5s linear infinite;
+          pointer-events: none;
+        }
+
+        .edge-beam-card:hover .card-border-beam {
+          opacity: 1;
+        }
+
+        .edge-beam-card:hover .card-border-beam::before {
+          animation-duration: 2.2s;
+        }
+
+        .progress-shimmer-highlight {
+          position: absolute;
+          inset: 0;
+          width: 60%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.75) 50%,
+            transparent 100%
+          );
+          animation: progressShimmer 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          pointer-events: none;
+        }
+
+        .skill-card-v2:hover .skill-icon-badge {
+          transform: scale(1.1) rotate(4deg);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .card-border-beam::before,
+          .progress-shimmer-highlight {
+            animation: none !important;
+          }
+        }
       `}</style>
 
       {/* ─── NAV ─── */}
@@ -988,7 +1075,7 @@ export default function Portfolio() {
               {about.highlights.map((h) => (
                 <div
                   key={h.title}
-                  className="highlight-card-v2"
+                  className="highlight-card-v2 edge-beam-card"
                   style={{
                     background: "var(--surface)",
                     border: "1px solid var(--border)",
@@ -997,9 +1084,13 @@ export default function Portfolio() {
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "1.125rem",
-                    transition: "border-color .2s",
+                    transition: "all .2s ease",
+                    position: "relative",
+                    overflow: "hidden",
+                    "--beam-color": "var(--accent)",
                   }}
                 >
+                  <div className="card-border-beam" aria-hidden="true" />
                   <div
                     style={{
                       width: 46,
@@ -1058,105 +1149,180 @@ export default function Portfolio() {
             if (!catSkills.length) return null;
             const col = CAT_COLORS[cat] || CAT_COLORS.Frontend;
             return (
-              <div key={cat} style={{ marginBottom: "2.5rem" }}>
+              <div key={cat} style={{ marginBottom: "2.75rem" }}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: ".625rem",
-                    marginBottom: "1.125rem",
+                    gap: ".75rem",
+                    marginBottom: "1.25rem",
                   }}
                 >
                   <div
                     style={{
-                      height: 3,
-                      width: 28,
-                      borderRadius: 2,
+                      height: 4,
+                      width: 24,
+                      borderRadius: 4,
                       background: col.color,
+                      boxShadow: `0 0 10px ${col.color}88`,
                     }}
                   />
                   <span
                     style={{
-                      fontSize: ".775rem",
-                      fontWeight: 800,
+                      fontSize: ".8rem",
+                      fontWeight: 900,
                       color: col.color,
-                      letterSpacing: ".08em",
+                      letterSpacing: ".1em",
                       textTransform: "uppercase",
                     }}
                   >
                     {cat}
                   </span>
+                  <span
+                    style={{
+                      fontSize: ".7rem",
+                      fontWeight: 700,
+                      color: "var(--text-muted)",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 100,
+                      padding: ".12rem .55rem",
+                    }}
+                  >
+                    {catSkills.length} skills
+                  </span>
                   <div
-                    style={{ flex: 1, height: 1, background: "var(--border)" }}
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      background: `linear-gradient(90deg, var(--border), transparent)`,
+                    }}
                   />
                 </div>
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))",
-                    gap: ".875rem",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
+                    gap: "1rem",
                   }}
                 >
                   {catSkills.map((s) => (
                     <div
                       key={s.name}
-                      className="skill-card-v2"
+                      className="skill-card-v2 edge-beam-card"
                       style={{
                         background: "var(--surface)",
                         border: `1px solid ${col.border}`,
                         borderRadius: "var(--radius-lg)",
-                        padding: "1.25rem",
+                        padding: "1.3rem 1.15rem 1.15rem",
                         display: "flex",
                         flexDirection: "column",
-                        gap: ".625rem",
-                        transition: "all .2s",
+                        justifyContent: "space-between",
+                        gap: ".875rem",
+                        transition: "all .25s cubic-bezier(0.16, 1, 0.3, 1)",
                         cursor: "default",
                         position: "relative",
                         overflow: "hidden",
+                        "--beam-color": col.color,
                       }}
                     >
+                      {/* Traveling Edge Progress Beam */}
+                      <div className="card-border-beam" aria-hidden="true" />
+
+                      {/* Top subtle glow bar */}
                       <div
                         style={{
                           position: "absolute",
                           top: 0,
                           left: 0,
                           right: 0,
-                          height: 3,
-                          background: col.color,
-                          opacity: 0.5,
+                          height: 2,
+                          background: `linear-gradient(90deg, transparent, ${col.color}, transparent)`,
+                          opacity: 0.8,
                         }}
                       />
-                      <div style={{ fontSize: "1.75rem" }}>{s.icon}</div>
-                      <div style={{ fontWeight: 800, fontSize: ".875rem" }}>
-                        {s.name}
+
+                      {/* Header with Icon Badge and Level Tag */}
+                      <div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: ".85rem",
+                          }}
+                        >
+                          <div
+                            className="skill-icon-badge"
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 12,
+                              background: col.bg,
+                              border: `1px solid ${col.border}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1.5rem",
+                              transition: "transform .25s ease",
+                              boxShadow: `0 4px 12px ${col.bg}`,
+                            }}
+                          >
+                            {s.icon}
+                          </div>
+                          <span
+                            style={{
+                              fontSize: ".65rem",
+                              fontWeight: 800,
+                              letterSpacing: ".04em",
+                              textTransform: "uppercase",
+                              color: col.color,
+                              background: col.bg,
+                              border: `1px solid ${col.border}`,
+                              padding: ".2rem .5rem",
+                              borderRadius: 100,
+                            }}
+                          >
+                            {s.level}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: ".92rem",
+                            letterSpacing: "-.015em",
+                            color: "var(--text)",
+                          }}
+                        >
+                          {s.name}
+                        </div>
                       </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: ".25rem",
-                        }}
-                      >
+
+                      {/* Bottom Proficiency with Animated Shimmer Bar */}
+                      <div>
                         <div
                           style={{
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
+                            marginBottom: ".35rem",
                           }}
                         >
                           <span
                             style={{
                               fontSize: ".68rem",
-                              fontWeight: 700,
-                              color: col.color,
+                              fontWeight: 600,
+                              color: "var(--text-muted)",
                             }}
                           >
-                            {s.level}
+                            Proficiency
                           </span>
                           <span
                             style={{
-                              fontSize: ".65rem",
-                              color: "var(--text-muted)",
+                              fontSize: ".72rem",
+                              fontWeight: 800,
+                              fontVariantNumeric: "tabular-nums",
+                              color: col.color,
                             }}
                           >
                             {LEVEL_PCT[s.level] || 70}%
@@ -1164,20 +1330,28 @@ export default function Portfolio() {
                         </div>
                         <div
                           style={{
-                            height: 4,
+                            height: 6,
                             background: "var(--surface-alt)",
-                            borderRadius: 2,
+                            borderRadius: 99,
                             overflow: "hidden",
+                            position: "relative",
+                            border: "1px solid var(--border)",
                           }}
                         >
                           <div
                             style={{
                               height: "100%",
                               width: `${LEVEL_PCT[s.level] || 70}%`,
-                              background: col.color,
-                              borderRadius: 2,
+                              background: `linear-gradient(90deg, ${col.color}, var(--primary))`,
+                              borderRadius: 99,
+                              position: "relative",
+                              overflow: "hidden",
+                              boxShadow: `0 0 10px ${col.color}44`,
+                              transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
                             }}
-                          />
+                          >
+                            <div className="progress-shimmer-highlight" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1261,6 +1435,7 @@ export default function Portfolio() {
                       </svg>
                     </div>
                     <div
+                      className="edge-beam-card"
                       style={{
                         flex: 1,
                         background: "var(--surface)",
@@ -1268,8 +1443,12 @@ export default function Portfolio() {
                         borderRadius: "var(--radius-lg)",
                         padding: "1.5rem",
                         borderLeft: "4px solid var(--primary)",
+                        position: "relative",
+                        overflow: "hidden",
+                        "--beam-color": "var(--primary)",
                       }}
                     >
+                      <div className="card-border-beam" aria-hidden="true" />
                       <div
                         style={{
                           display: "flex",
@@ -1381,7 +1560,7 @@ export default function Portfolio() {
             {projects.map((p, i) => (
               <div
                 key={i}
-                className="proj-card-v2"
+                className="proj-card-v2 edge-beam-card"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
@@ -1391,8 +1570,10 @@ export default function Portfolio() {
                   flexDirection: "column",
                   transition: "all .25s",
                   position: "relative",
+                  "--beam-color": "var(--primary)",
                 }}
               >
+                <div className="card-border-beam" aria-hidden="true" />
                 {/* Gradient top accent */}
                 <div
                   className="proj-top-bar"
