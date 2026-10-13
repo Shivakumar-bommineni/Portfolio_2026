@@ -101,9 +101,13 @@ export default function Login() {
       }}>
         {/* logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1.625rem' }}>
-          <div className="sb-mark">SB</div>
+          <div className="sb-mark">
+            <span className="sb-mark-text">SB</span>
+          </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>shivakumar_dev</div>
+            <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>
+              ShivaKumar<span className="p-brand-accent">_B</span>
+            </div>
             <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>Private Access</div>
           </div>
         </div>

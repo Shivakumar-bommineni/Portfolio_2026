@@ -6,7 +6,7 @@
 const SHIVAKUMAR_DATA = {
   personal: {
     name: 'Shivakumar Bommineni',
-    handle: '@shivakumar_dev',
+    handle: '@ShivaKumar_B',
     title: 'Full Stack Developer',
     location: 'India',
     email: 'contact via portfolio',

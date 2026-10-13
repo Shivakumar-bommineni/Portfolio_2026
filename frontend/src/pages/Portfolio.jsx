@@ -92,7 +92,7 @@ export const DEFAULT_CONFIG = {
     name: "Shivakumar Bommineni",
     title: "Full Stack Developer",
     bio: "Building high-performance web applications with Node.js, React.js, and Next.js. Passionate about clean architecture, secure systems, and great developer experiences.",
-    handle: "shivakumar_dev",
+    handle: "ShivaKumar_B",
     eyebrow: "Available to Work",
     avatarText: "SB",
     avatarUrl: "",
@@ -559,11 +559,25 @@ export default function Portfolio() {
       >
         <div className="p-nav-inner">
           <a className="p-nav-brand" href="#hero">
-            <div className="sb-mark">{hero.avatarText || "SB"}</div>
-            <span style={{ fontWeight: 900 }}>
-              {hero.handle || "shivakumar_dev"}
-            </span>
-            <small style={{ opacity: 0.6 }}>· Full Stack Dev</small>
+            <div className="sb-mark">
+              <span className="sb-mark-text">{hero.avatarText || "SB"}</span>
+            </div>
+            <div className="p-brand-text">
+              <span className="p-brand-title">
+                {hero.handle && hero.handle.includes("_") ? (
+                  <>
+                    <span>{hero.handle.split("_")[0]}</span>
+                    <span className="p-brand-accent">_{hero.handle.split("_").slice(1).join("_")}</span>
+                  </>
+                ) : (
+                  <span>{hero.handle || "ShivaKumar_B"}</span>
+                )}
+              </span>
+              <span className="p-brand-badge">
+                <span className="p-brand-pulse" />
+                <span>Full Stack Dev</span>
+              </span>
+            </div>
           </a>
           <div
             className="p-nav-links"
@@ -2231,29 +2245,64 @@ export default function Portfolio() {
               gap: "1.25rem",
             }}
           >
-            <div
-              style={{ display: "flex", alignItems: "center", gap: ".875rem" }}
+            <a
+              href="#hero"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem",
+                textDecoration: "none",
+                color: "inherit",
+              }}
+              className="p-nav-brand"
             >
               <div
                 className="sb-mark"
                 style={{
-                  width: 34,
-                  height: 34,
-                  fontSize: ".78rem",
-                  borderRadius: 9,
+                  width: 42,
+                  height: 42,
+                  fontSize: ".9rem",
+                  borderRadius: 12,
                 }}
               >
-                {hero.avatarText || "SB"}
+                <span className="sb-mark-text">{hero.avatarText || "SB"}</span>
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: ".9rem" }}>
-                  {hero.name}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".55rem",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: 900,
+                      fontSize: "1.06rem",
+                      letterSpacing: "-0.3px",
+                      color: "var(--text)",
+                    }}
+                  >
+                    ShivaKumar<span className="p-brand-accent">_B</span>
+                  </span>
+                  <span className="p-brand-badge" style={{ fontSize: ".68rem", padding: "2px 8px" }}>
+                    <span className="p-brand-pulse" />
+                    Full Stack Dev
+                  </span>
                 </div>
-                <div style={{ fontSize: ".73rem", color: "var(--text-muted)" }}>
-                  Full Stack Developer · {new Date().getFullYear()}
+                <div
+                  style={{
+                    fontSize: ".76rem",
+                    color: "var(--text-muted)",
+                    marginTop: ".2rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {hero.name} · Full Stack Developer · {new Date().getFullYear()}
                 </div>
               </div>
-            </div>
+            </a>
             <div
               style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}
             >
