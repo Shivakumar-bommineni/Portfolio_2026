@@ -442,9 +442,93 @@ export default function Portfolio() {
           transform: scale(1.1) rotate(4deg);
         }
 
+        /* ── Hero Centerpiece Animations ── */
+        @keyframes sbCardFloat {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-10px) rotate(1.2deg);
+          }
+        }
+
+        @keyframes auraGlow {
+          0%, 100% {
+            opacity: 0.35;
+            transform: scale(1);
+            filter: blur(35px);
+          }
+          50% {
+            opacity: 0.68;
+            transform: scale(1.12);
+            filter: blur(48px);
+          }
+        }
+
+        @keyframes radarPulse {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.75);
+          }
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+          }
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+          }
+        }
+
+        @keyframes cursorBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+
+        @keyframes badgeFloat1 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-7px); }
+        }
+
+        @keyframes badgeFloat2 {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(7px); }
+        }
+
+        .hero-grid-pattern {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(var(--border) 1.2px, transparent 1.2px);
+          background-size: 32px 32px;
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 85%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 40%, transparent 85%);
+          pointer-events: none;
+          opacity: 0.65;
+        }
+
+        .hero-tech-pill {
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-tech-pill:hover {
+          transform: translateY(-3px) scale(1.05);
+          border-color: var(--primary) !important;
+          color: var(--primary) !important;
+          box-shadow: 0 8px 18px -4px rgba(37,99,235,0.22);
+        }
+
+        .hero-stat-card {
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-stat-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--primary) !important;
+          box-shadow: 0 10px 24px -6px rgba(37,99,235,0.25);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .card-border-beam::before,
-          .progress-shimmer-highlight {
+          .progress-shimmer-highlight,
+          .pf-hero-right > div {
             animation: none !important;
           }
         }
@@ -534,7 +618,24 @@ export default function Portfolio() {
           overflow: "hidden",
         }}
       >
-        {/* Animated blobs */}
+        {/* Subtle developer grid pattern */}
+        <div className="hero-grid-pattern" aria-hidden="true" />
+
+        {/* Ambient top light beam */}
+        <div
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: 400,
+            top: 0,
+            left: 0,
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% -10%, rgba(37,99,235,0.18), transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Animated dynamic atmospheric blobs */}
         <div
           style={{
             position: "absolute",
@@ -542,7 +643,7 @@ export default function Portfolio() {
             height: 700,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(37,99,235,.13), transparent 70%)",
+              "radial-gradient(circle, rgba(37,99,235,.15), transparent 70%)",
             top: -200,
             right: -150,
             pointerEvents: "none",
@@ -552,11 +653,11 @@ export default function Portfolio() {
         <div
           style={{
             position: "absolute",
-            width: 500,
-            height: 500,
+            width: 550,
+            height: 550,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(124,58,237,.11), transparent 70%)",
+              "radial-gradient(circle, rgba(124,58,237,.14), transparent 70%)",
             bottom: -100,
             left: -100,
             pointerEvents: "none",
@@ -566,11 +667,11 @@ export default function Portfolio() {
         <div
           style={{
             position: "absolute",
-            width: 300,
-            height: 300,
+            width: 350,
+            height: 350,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(16,185,129,.08), transparent 70%)",
+              "radial-gradient(circle, rgba(16,185,129,.10), transparent 70%)",
             top: "40%",
             left: "35%",
             pointerEvents: "none",
@@ -584,7 +685,7 @@ export default function Portfolio() {
             zIndex: 1,
             maxWidth: 1140,
             margin: "0 auto",
-            padding: "4rem 2rem",
+            padding: "4.5rem 2rem",
             width: "100%",
           }}
         >
@@ -596,31 +697,35 @@ export default function Portfolio() {
               gap: "4rem",
             }}
           >
-            {/* Left */}
+            {/* Left Column */}
             <div className="pf-hero-left">
               {/* Status badge */}
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: ".5rem",
-                  background: "rgba(16,185,129,.1)",
-                  border: "1px solid rgba(16,185,129,.25)",
+                  gap: ".55rem",
+                  background: "rgba(16,185,129,.12)",
+                  border: "1px solid rgba(16,185,129,.3)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   borderRadius: 100,
-                  padding: ".35rem 1rem",
+                  padding: ".4rem 1.1rem",
                   marginBottom: "1.5rem",
                   fontSize: ".78rem",
                   fontWeight: 700,
                   color: "var(--success)",
+                  boxShadow: "0 2px 10px rgba(16,185,129,0.12)",
                 }}
               >
                 <span
                   style={{
-                    width: 7,
-                    height: 7,
+                    width: 8,
+                    height: 8,
                     borderRadius: "50%",
                     background: "var(--success)",
-                    animation: "badgePulse 2s ease infinite",
+                    boxShadow: "0 0 10px var(--success)",
+                    animation: "radarPulse 2s ease-in-out infinite",
                   }}
                 />
                 {hero.eyebrow}
@@ -629,20 +734,23 @@ export default function Portfolio() {
               {/* Name */}
               <h1
                 style={{
-                  fontSize: "clamp(2.5rem,5.5vw,4rem)",
-                  fontWeight: 900,
+                  fontSize: "clamp(2.5rem,5.5vw,4.25rem)",
+                  fontWeight: 950,
                   letterSpacing: "-2px",
-                  lineHeight: 1.08,
-                  marginBottom: ".625rem",
+                  lineHeight: 1.06,
+                  marginBottom: ".75rem",
                 }}
               >
                 {hero.name.includes(" ") ? (
                   <>
-                    {hero.name.split(" ")[0]}
+                    <span style={{ color: "var(--text)" }}>
+                      {hero.name.split(" ")[0]}
+                    </span>
                     <br />
                     <span
                       style={{
-                        background: "var(--grad)",
+                        background:
+                          "linear-gradient(135deg, var(--primary) 0%, var(--accent) 60%, #ec4899 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         backgroundClip: "text",
@@ -659,40 +767,88 @@ export default function Portfolio() {
               {/* Role */}
               <div
                 style={{
-                  fontSize: "clamp(1.1rem,2vw,1.4rem)",
+                  fontSize: "clamp(1.15rem,2vw,1.45rem)",
                   fontWeight: 700,
                   color: "var(--text-sec)",
-                  marginBottom: "1rem",
+                  marginBottom: "1.25rem",
+                  letterSpacing: "-.02em",
                 }}
               >
                 {hero.title}
               </div>
 
-              {/* Terminal handle */}
+              {/* Authentic Developer Terminal Prompt */}
               <div
                 style={{
-                  fontFamily: "'SF Mono','Fira Code','Cascadia Code',monospace",
+                  fontFamily:
+                    "'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace",
                   fontSize: ".875rem",
                   color: "var(--text-muted)",
-                  marginBottom: "1.5rem",
-                  display: "flex",
+                  marginBottom: "1.75rem",
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: ".5rem",
+                  gap: ".75rem",
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  padding: ".5rem .875rem",
-                  width: "fit-content",
+                  borderRadius: 12,
+                  padding: ".55rem 1rem",
+                  boxShadow: "var(--shadow-sm)",
                 }}
               >
-                <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                  ~
-                </span>
-                <span style={{ color: "var(--primary)" }}>$</span>
-                <span> whoami </span>
-                <span style={{ color: "var(--accent)", fontWeight: 700 }}>
-                  {hero.handle}
-                </span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <span
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "#ef4444",
+                    }}
+                  />
+                  <span
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "#f59e0b",
+                    }}
+                  />
+                  <span
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "#10b981",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{ height: 14, width: 1, background: "var(--border)" }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".45rem",
+                  }}
+                >
+                  <span style={{ color: "var(--success)", fontWeight: 700 }}>
+                    ~
+                  </span>
+                  <span style={{ color: "var(--primary)" }}>$</span>
+                  <span>whoami</span>
+                  <span style={{ color: "var(--accent)", fontWeight: 700 }}>
+                    {hero.handle}
+                  </span>
+                  <span
+                    style={{
+                      width: 2,
+                      height: 14,
+                      background: "var(--primary)",
+                      display: "inline-block",
+                      animation: "cursorBlink 1s infinite",
+                    }}
+                  />
+                </div>
               </div>
 
               <p
@@ -701,7 +857,7 @@ export default function Portfolio() {
                   color: "var(--text-sec)",
                   maxWidth: 520,
                   lineHeight: 1.8,
-                  marginBottom: "2rem",
+                  marginBottom: "2.25rem",
                 }}
               >
                 {hero.bio}
@@ -719,7 +875,11 @@ export default function Portfolio() {
                 <button
                   className="btn btn-primary"
                   onClick={() => scrollTo("projects")}
-                  style={{ padding: ".8rem 2rem", fontSize: ".95rem" }}
+                  style={{
+                    padding: ".85rem 2.25rem",
+                    fontSize: ".95rem",
+                    boxShadow: "0 8px 24px -4px rgba(37,99,235,0.45)",
+                  }}
                 >
                   View My Work <ArrowRight />
                 </button>
@@ -727,24 +887,25 @@ export default function Portfolio() {
                   className="btn-hero-outline"
                   onClick={() => scrollTo("contact")}
                   style={{
-                    padding: ".8rem 2rem",
+                    padding: ".85rem 2.25rem",
                     fontSize: ".95rem",
                     fontWeight: 700,
                     border: "2px solid var(--border)",
                     borderRadius: "var(--radius)",
-                    background: "transparent",
+                    background: "var(--surface)",
                     color: "var(--text)",
                     cursor: "pointer",
-                    transition: "all .2s",
+                    transition: "all .2s cubic-bezier(0.16, 1, 0.3, 1)",
                     fontFamily: "inherit",
+                    boxShadow: "var(--shadow-sm)",
                   }}
                 >
                   Let's Talk
                 </button>
               </div>
 
-              {/* Stats row */}
-              <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+              {/* Stats row with interactive cards */}
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 {[
                   { num: "3+", label: "Years Coding" },
                   { num: "10+", label: "Projects Built" },
@@ -752,30 +913,38 @@ export default function Portfolio() {
                 ].map((s) => (
                   <div
                     key={s.label}
-                    className="pf-stat"
+                    className="hero-stat-card edge-beam-card pf-stat"
                     style={{
-                      borderLeft: "3px solid var(--primary)",
-                      paddingLeft: ".875rem",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 14,
+                      padding: ".85rem 1.25rem",
+                      minWidth: 115,
+                      position: "relative",
+                      "--beam-color": "var(--primary)",
                     }}
                   >
+                    <div className="card-border-beam" aria-hidden="true" />
                     <div
                       style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 900,
+                        fontSize: "1.65rem",
+                        fontWeight: 950,
                         letterSpacing: "-.5px",
                         background: "var(--grad)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         backgroundClip: "text",
+                        lineHeight: 1.1,
+                        marginBottom: ".25rem",
                       }}
                     >
                       {s.num}
                     </div>
                     <div
                       style={{
-                        fontSize: ".75rem",
+                        fontSize: ".74rem",
                         color: "var(--text-muted)",
-                        fontWeight: 600,
+                        fontWeight: 700,
                       }}
                     >
                       {s.label}
@@ -785,47 +954,151 @@ export default function Portfolio() {
               </div>
             </div>
 
-            {/* Right — Avatar */}
+            {/* Right Column — Animated Centerpiece Avatar */}
             <div
               className="pf-hero-right"
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "1.5rem",
+                gap: "1.65rem",
+                position: "relative",
               }}
             >
-              <div style={{ position: "relative" }}>
-                {/* Glow ring */}
+              {/* Floating Main Avatar Assembly */}
+              <div
+                style={{
+                  position: "relative",
+                  animation: "sbCardFloat 6s ease-in-out infinite",
+                }}
+              >
+                {/* Animated Radial Aura Glow */}
                 <div
                   style={{
                     position: "absolute",
-                    inset: -16,
-                    borderRadius: 44,
+                    inset: -24,
+                    borderRadius: 50,
                     background: "var(--grad)",
-                    opacity: 0.15,
-                    filter: "blur(30px)",
+                    animation: "auraGlow 5s ease-in-out infinite",
                     zIndex: 0,
                   }}
                 />
+
+                {/* Floating Satellite Chip 1 (Top Left): "⚡ Fast & Scalable" */}
                 <div
                   style={{
-                    width: 220,
-                    height: 220,
-                    borderRadius: 32,
-                    background: "var(--grad)",
+                    position: "absolute",
+                    top: -16,
+                    left: -32,
+                    zIndex: 10,
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 100,
+                    padding: ".35rem .75rem",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "5rem",
-                    fontWeight: 900,
-                    color: "#fff",
-                    position: "relative",
-                    zIndex: 1,
-                    animation: "avatarRing 4s ease infinite",
-                    overflow: "hidden",
+                    gap: ".4rem",
+                    fontSize: ".72rem",
+                    fontWeight: 800,
+                    color: "var(--text)",
+                    boxShadow: "var(--shadow)",
+                    animation: "badgeFloat1 4s ease-in-out infinite",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
                   }}
                 >
+                  <span style={{ color: "#f59e0b" }}>⚡</span> High Performance
+                </div>
+
+                {/* Floating Satellite Chip 2 (Bottom Left): "🔐 JWT & RBAC" */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 24,
+                    left: -40,
+                    zIndex: 10,
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 100,
+                    padding: ".35rem .75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: ".4rem",
+                    fontSize: ".72rem",
+                    fontWeight: 800,
+                    color: "var(--text)",
+                    boxShadow: "var(--shadow)",
+                    animation: "badgeFloat2 5s ease-in-out infinite",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                  }}
+                >
+                  <span style={{ color: "var(--primary)" }}>🔐</span> JWT & RBAC
+                </div>
+
+                {/* The SB Card Itself */}
+                <div
+                  className="edge-beam-card"
+                  style={{
+                    width: 250,
+                    height: 250,
+                    borderRadius: 36,
+                    background:
+                      "linear-gradient(145deg, #1d4ed8 0%, #2563eb 35%, #7c3aed 70%, #9333ea 100%)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    zIndex: 2,
+                    overflow: "hidden",
+                    boxShadow:
+                      "0 24px 60px -12px rgba(37,99,235,0.45), 0 0 0 1px rgba(255,255,255,0.18) inset",
+                    "--beam-color": "#ffffff",
+                  }}
+                >
+                  {/* Traveling edge border beam */}
+                  <div className="card-border-beam" aria-hidden="true" />
+
+                  {/* Specular glass reflection diagonal sheen */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.02) 45%, transparent 100%)",
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  {/* Decorative developer watermark in card corner */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 14,
+                      left: 18,
+                      fontFamily: "monospace",
+                      fontSize: ".7rem",
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.35)",
+                      letterSpacing: ".08em",
+                    }}
+                  >
+                    {"<dev:portfolio />"}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 16,
+                      left: 18,
+                      fontFamily: "monospace",
+                      fontSize: ".65rem",
+                      color: "rgba(255,255,255,0.25)",
+                    }}
+                  >
+                    {"v2026.1"}
+                  </div>
+
                   {hero.avatarUrl ? (
                     <img
                       src={hero.avatarUrl}
@@ -837,44 +1110,68 @@ export default function Portfolio() {
                       }}
                     />
                   ) : (
-                    <span style={{ userSelect: "none" }}>
+                    <div
+                      style={{
+                        fontSize: "5.5rem",
+                        fontWeight: 950,
+                        letterSpacing: "-2px",
+                        color: "#ffffff",
+                        userSelect: "none",
+                        textShadow: "0 8px 30px rgba(0,0,0,0.35)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        lineHeight: 1,
+                      }}
+                    >
                       {hero.avatarText || "SB"}
-                    </span>
+                    </div>
                   )}
-                </div>
-                {/* Online badge */}
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 12,
-                    right: 12,
-                    zIndex: 2,
-                    background: "var(--surface)",
-                    border: "2px solid var(--border)",
-                    borderRadius: 100,
-                    padding: ".25rem .625rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: ".35rem",
-                    fontSize: ".7rem",
-                    fontWeight: 700,
-                    color: "var(--success)",
-                  }}
-                >
-                  <span
+
+                  {/* "Open to Work" Live Beacon Pill */}
+                  <div
                     style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: "50%",
-                      background: "var(--success)",
+                      position: "absolute",
+                      bottom: 14,
+                      right: 14,
+                      zIndex: 4,
+                      background: "rgba(15, 23, 42, 0.85)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      border: "1px solid rgba(16, 185, 129, 0.45)",
+                      borderRadius: 100,
+                      padding: ".3rem .75rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: ".45rem",
+                      fontSize: ".72rem",
+                      fontWeight: 800,
+                      color: "#34d399",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
                     }}
-                  />
-                  Open to Work
+                  >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "#10b981",
+                        animation: "radarPulse 2s ease-in-out infinite",
+                      }}
+                    />
+                    Open to Work
+                  </div>
                 </div>
               </div>
 
-              {/* Socials */}
-              <div style={{ display: "flex", gap: ".75rem" }}>
+              {/* Social Links Row */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: ".875rem",
+                  marginTop: ".25rem",
+                }}
+              >
                 {[
                   {
                     href: contact.github,
@@ -900,9 +1197,9 @@ export default function Portfolio() {
                     className="social-btn-v2"
                     title={s.title}
                     style={{
-                      width: 46,
-                      height: 46,
-                      borderRadius: 12,
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
                       border: "1.5px solid var(--border)",
                       background: "var(--surface)",
                       display: "flex",
@@ -910,7 +1207,8 @@ export default function Portfolio() {
                       justifyContent: "center",
                       color: "var(--text-sec)",
                       textDecoration: "none",
-                      transition: "all .2s",
+                      transition: "all .2s cubic-bezier(0.16, 1, 0.3, 1)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                     }}
                   >
                     {s.icon}
@@ -918,30 +1216,36 @@ export default function Portfolio() {
                 ))}
               </div>
 
-              {/* Tech stack pills */}
+              {/* Interactive Tech Stack Capsules */}
               <div
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: ".4rem",
+                  gap: ".45rem",
                   justifyContent: "center",
-                  maxWidth: 260,
+                  maxWidth: 290,
                 }}
               >
                 {skills.slice(0, 6).map((s) => (
                   <span
                     key={s.name}
+                    className="hero-tech-pill"
                     style={{
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      padding: ".2rem .625rem",
-                      fontSize: ".73rem",
+                      borderRadius: 10,
+                      padding: ".3rem .7rem",
+                      fontSize: ".75rem",
                       fontWeight: 700,
                       color: "var(--text-sec)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: ".35rem",
+                      cursor: "default",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
                     }}
                   >
-                    {s.icon} {s.name}
+                    <span>{s.icon}</span> {s.name}
                   </span>
                 ))}
               </div>
