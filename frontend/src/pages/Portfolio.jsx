@@ -93,7 +93,7 @@ export const DEFAULT_CONFIG = {
     title: "Full Stack Developer",
     bio: "Building high-performance web applications with Node.js, React.js, and Next.js. Passionate about clean architecture, secure systems, and great developer experiences.",
     handle: "shivakumar_dev",
-    eyebrow: "Available for freelance & full-time roles",
+    eyebrow: "Available to Work",
     avatarText: "SB",
     avatarUrl: "",
   },
@@ -147,27 +147,29 @@ export const DEFAULT_CONFIG = {
     {
       company: "CHRP-INDIA",
       role: "Full Stack Developer",
-      startDate: "Apr 2026",
+      startDate: "2026",
       endDate: "Present",
       location: "Hyderabad",
       bullets: [
-        "Engineered scalable full-stack applications (LMS, HRIS, and ATS) utilizing React.js, Node.js, Express.js, PostgreSQL, and REST APIs.",
-        "Built dynamic, responsive frontend interfaces featuring custom reusable components, interactive dashboards, advanced filtering, and inline document previews.",
-        "Developed secure backend architectures with strict Role-Based Access Control (RBAC) and data isolation for diverse user tiers (Admin, HR, Trainers, Learners).",
-        "Delivered complex end-to-end workflows including learning assessments, employee appraisals, automated interview scheduling, and recruitment tracking.",
-        "Collaborated within Agile/Scrum teams using Git/GitHub, ensuring robust API integration, data validation, and optimized application performance."
+        "Project: Schneider Electric – Learning Management System (LMS) — Developed & maintained enterprise LMS using React.js, Node.js, Express.js, SQL/PostgreSQL, and REST APIs for Admin, Trainer, Learner, and Super Admin modules.",
+        "Engineered backend APIs for courses, assessments, trainer management, notifications, feedback, reporting, dynamic analytics dashboards, and role-based access control with data isolation.",
+        "Project: Internal HRIS Application — Built full-stack features using React.js & Node.js for Employee Management, Appraisals, Interview Scheduling, Leave Management, and responsive search/filtering interfaces.",
+        "Project: Internal Applicant Tracking System (ATS) — Developed recruitment modules covering candidate management, walk-in validation, interview scheduling, inline DOCX/PDF resume preview, and RBAC visibility (HR Manager, Admin, Recruiter).",
+        "Used Git/GitHub for version control and collaborated with development and QA teams following Agile/Scrum practices."
       ],
     },
     {
-      company: "Pereco",
-      role: "Full-stack Developer",
-      startDate: "Mar 2025",
-      endDate: "Present",
-      location: "Hyderabad, Telangana, India · On-site",
+      company: "Perennial Code IT & Consultant Pvt. Ltd.",
+      role: "Full Stack Web Developer",
+      startDate: "2025",
+      endDate: "2026",
+      location: "Hyderabad",
       bullets: [
-        "Worked on full-stack development projects using MERN Stack technologies.",
-        "Designed and developed dynamic web pages using React.js and integrated RESTful APIs.",
-        "Handled backend logic and data flow to ensure smooth application performance."
+        "Developed full-stack web applications using React.js, Node.js, Express.js, SQL, MongoDB, HTML, CSS, and JavaScript.",
+        "Developed responsive and reusable frontend components using React.js and Bootstrap; integrated frontend with backend REST APIs.",
+        "Implemented secure authentication, CRUD operations, form validation, and complex SQL/MySQL and MongoDB database queries.",
+        "Collaborated on production web platforms including hospital booking systems (BookMyOT) and e-commerce applications, deploying on Hostinger and cloud platforms.",
+        "Tested REST APIs using Postman and managed source code with Git/GitHub following Agile delivery practices."
       ],
     },
     {
@@ -196,25 +198,25 @@ export const DEFAULT_CONFIG = {
   projects: [
     {
       num: "01",
-      title: "Real-Time Chat App",
-      desc: "Full-stack real-time messaging with Next.js and Socket.io featuring instant notifications, message persistence with PostgreSQL, and secure JWT authentication.",
-      tags: ["Next.js", "Socket.io", "PostgreSQL", "JWT"],
+      title: "BookMyOT – Hospital Booking Platform",
+      desc: "Developed a hospital booking platform to streamline scheduling of anesthetists and surgeons for planned and emergency procedures. Built with responsive dashboards and deployed on Hostinger.",
+      tags: ["React.js", "SQL", "Node.js", "Hospital Mgmt", "Hostinger"],
       github: "#",
       live: "#",
     },
     {
       num: "02",
-      title: "Secure Payment System",
-      desc: "Production-grade payment app with OTP phone verification, cookie-based JWT, role-based access control, and full audit logging.",
-      tags: ["React.js", "Node.js", "PostgreSQL", "Express"],
+      title: "Giivv – E-Commerce Website (PWA)",
+      desc: "Developed a responsive e-commerce platform with progressive web app (PWA) features, including cart, wishlist, category filtering, and secure online payment workflows.",
+      tags: ["React.js", "PWA", "JavaScript", "E-Commerce", "REST APIs"],
       github: "#",
       live: "#",
     },
     {
       num: "03",
-      title: "ShivDev Portfolio Studio",
-      desc: "Personal portfolio with a private developer dashboard for interview prep, notes, resume building, and fully editable content with AI chatbot.",
-      tags: ["React.js", "Node.js", "PostgreSQL", "Ollama AI"],
+      title: "Smart Visitor Management System with QR Code",
+      desc: "Developed a contactless visitor management system using QR code technology. Generates unique visitor passes delivered via WhatsApp and Email for instant, secure gate check-in.",
+      tags: ["React.js", "Node.js", "Express.js", "SQL", "QR Code", "WhatsApp API"],
       github: "#",
       live: "#",
     },
@@ -2031,8 +2033,8 @@ export default function Portfolio() {
             <div className="sec-tag">Contact</div>
             <h2 className="sec-title">Let's Build Together</h2>
             <p className="sec-sub">
-              Open to new opportunities, freelance projects, or just a good
-              conversation.
+              Open to new engineering opportunities, full-time roles, or tech
+              discussions.
             </p>
           </div>
           <div
@@ -2084,8 +2086,7 @@ export default function Portfolio() {
                     lineHeight: 1.65,
                   }}
                 >
-                  I'm currently open to full-time roles, freelance projects, and
-                  exciting collaborations.
+                  I'm currently open to full-time roles and high-impact engineering opportunities.
                 </div>
               </div>
 

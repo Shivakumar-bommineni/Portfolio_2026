@@ -11,79 +11,85 @@ const SHIVAKUMAR_DATA = {
     location: 'India',
     email: 'contact via portfolio',
     github: 'github.com/shivakumar-dev9177',
-    availability: 'Open to full-time, contract, and freelance opportunities',
+    availability: 'Available to Work (Full-time opportunities)',
     languages: ['Telugu (native)', 'English (professional)'],
   },
 
-  bio: `Shivakumar Bommineni is a passionate Full Stack Developer with strong expertise in
-React, Node.js, Next.js, and PostgreSQL. He builds end-to-end web applications with
-clean architecture, secure authentication, and modern UI design. He has hands-on
-experience delivering production-ready projects from concept to deployment and is
-always eager to learn emerging technologies.`,
+  bio: `Shivakumar Bommineni is a Full Stack Developer with hands-on experience building enterprise
+and scalable web applications with React.js, Node.js, Express.js, SQL/PostgreSQL, and REST APIs.
+He has engineered core modules for enterprise LMS, internal HRIS and ATS platforms, hospital
+booking systems, and e-commerce PWAs.`,
 
   skills: {
     frontend: [
-      'React.js', 'Next.js', 'JavaScript (ES6+)', 'TypeScript',
-      'HTML5', 'CSS3', 'Tailwind CSS', 'Vite', 'React Router',
+      'React.js', 'Next.js', 'JavaScript (ES6+)', 'HTML5', 'CSS3',
+      'Tailwind CSS', 'Bootstrap', 'Vite', 'React Router', 'PWA',
     ],
     backend: [
       'Node.js', 'Express.js', 'REST API design', 'JWT Authentication',
-      'Cookie-based auth', 'Middleware design', 'Rate limiting',
+      'Cookie-based auth', 'RBAC (Role-Based Access Control)', 'Middleware design',
     ],
     database: [
-      'PostgreSQL', 'SQL', 'JSONB', 'Database schema design',
+      'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Database schema design',
       'Query optimization',
     ],
     devOps: [
-      'Git', 'GitHub', 'Docker (basics)', 'Environment config (.env)',
-      'Vercel deployment', 'Render deployment',
+      'Git', 'GitHub', 'Hostinger deployment', 'Vercel deployment', 'Render deployment',
     ],
     tools: [
       'VS Code', 'Postman', 'pgAdmin', 'npm / yarn',
-      'Chrome DevTools', 'Figma (basic)',
+      'Chrome DevTools',
     ],
   },
 
   experience: [
     {
       role: 'Full Stack Developer',
-      company: 'Freelance / Self-employed',
-      duration: 'Ongoing',
-      description: `Building full-stack web applications for clients using React, Node.js, and PostgreSQL.
-Specializing in secure authentication systems, dashboard UIs, portfolio sites,
-and custom management tools.`,
-      tech: ['React', 'Node.js', 'Express', 'PostgreSQL', 'JWT'],
+      company: 'CHRP-INDIA',
+      location: 'Hyderabad',
+      duration: '2026 – Present',
+      description: `Developing and maintaining enterprise LMS applications (Schneider Electric) and internal HRIS and ATS systems using React.js, Node.js, Express.js, SQL/PostgreSQL, and REST APIs. Built reusable components, secure RBAC, assessment modules, appraisal workflows, and walk-in candidate tracking.`,
+      tech: ['React.js', 'Node.js', 'Express.js', 'SQL', 'PostgreSQL', 'REST APIs', 'RBAC'],
+    },
+    {
+      role: 'Full Stack Web Developer',
+      company: 'Perennial Code IT & Consultant Pvt. Ltd.',
+      location: 'Hyderabad',
+      duration: '2025 – 2026',
+      description: `Engineered full-stack applications with React.js, Node.js, Express.js, SQL, and MongoDB. Collaborated on hospital booking platform (BookMyOT) and e-commerce platforms with Hostinger and cloud deployment.`,
+      tech: ['React.js', 'Node.js', 'Express.js', 'SQL', 'MongoDB', 'Bootstrap'],
     },
   ],
 
   projects: [
     {
-      name: 'Personal Portfolio + Developer Studio',
-      description: `A full-stack personal portfolio website with a private developer dashboard.
-Public side showcases skills, experience, and projects for recruiters.
-Private dashboard includes: Notes manager, Interview Q&A preparation system,
-Resume Builder with live preview and PDF export, Portfolio Editor to update
-all content and colors from inside, and Dark/Light mode.`,
-      tech: ['React', 'Node.js', 'Express', 'PostgreSQL', 'JWT', 'Vite'],
+      name: 'BookMyOT – Hospital Booking Platform',
+      description: `Hospital booking platform to streamline scheduling of anesthetists and surgeons for planned and emergency procedures with responsive dashboards and Hostinger deployment.`,
+      tech: ['React.js', 'SQL', 'Node.js', 'Hostinger'],
       highlights: [
-        'Cookie-based JWT authentication',
-        'Single-tab session enforcement',
-        'Cross-tab logout via BroadcastChannel',
-        'Dynamic portfolio content stored in PostgreSQL',
-        'Resume builder with print-to-PDF',
-        'AI chatbot powered by Ollama llama3.2',
+        'Streamlined scheduling for anesthetists and surgeons',
+        'Responsive hospital and doctor dashboards',
+        'Production deployment on Hostinger',
       ],
     },
     {
-      name: 'SecurePay Application',
-      description: `A secure payment and user management application with OTP-based registration,
-role-based access control (user / admin / super-admin), and a full admin panel.`,
-      tech: ['React', 'Node.js', 'Express', 'PostgreSQL', 'Twilio SMS'],
+      name: 'Giivv – E-Commerce Website (PWA)',
+      description: `Responsive e-commerce platform with progressive web app (PWA) features, dynamic shopping cart, product wishlist, category filters, and seamless checkout.`,
+      tech: ['React.js', 'PWA', 'JavaScript', 'REST APIs'],
       highlights: [
-        'Multi-step OTP registration',
-        'Role-based routing',
-        'Admin and super-admin dashboards',
-        'Rate limiting and helmet security',
+        'Progressive Web App offline-ready capability',
+        'Interactive cart and wishlist management',
+        'Category search and filtering',
+      ],
+    },
+    {
+      name: 'Smart Visitor Management System with QR Code',
+      description: `Contactless visitor management system utilizing dynamic QR code passes delivered via WhatsApp and Email for instant, secure gate check-in.`,
+      tech: ['React.js', 'Node.js', 'Express.js', 'SQL', 'QR Code', 'WhatsApp API'],
+      highlights: [
+        'QR code badge generation',
+        'Automated WhatsApp and Email pass delivery',
+        'Real-time visitor check-in/check-out tracking',
       ],
     },
   ],
