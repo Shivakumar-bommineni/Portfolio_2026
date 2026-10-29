@@ -223,7 +223,7 @@ export const DEFAULT_CONFIG = {
   ],
   contact: {
     email: "shivabommineni3@gmail.com",
-    github: "https://github.com/shivakumar-bommineni-git/",
+    github: "https://github.com/shivakumar-bommineni",
     linkedin: "https://www.linkedin.com/in/shivakumar-bommineni-331406292/",
   },
   theme: { primary: "#2563eb", accent: "#7c3aed" },
