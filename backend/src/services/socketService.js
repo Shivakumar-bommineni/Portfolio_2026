@@ -14,16 +14,31 @@ function parseCookie(cookieString, key) {
 }
 
 function initSocket(httpServer) {
-  const allowedOrigins = [
+  const rawOrigins = [
     process.env.CLIENT_URL,
     process.env.FRONTEND_URL,
     'http://localhost:5173',
     'http://localhost:5174',
   ].filter(Boolean);
 
+  const allowedOrigins = Array.from(
+    new Set([
+      ...rawOrigins,
+      ...rawOrigins.map((u) => u.replace(/\/+$/, '')),
+      ...rawOrigins.map((u) => `${u.replace(/\/+$/, '')}/`),
+    ])
+  );
+
   io = new Server(httpServer, {
     cors: {
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const normalized = origin.replace(/\/+$/, '');
+        if (allowedOrigins.some((o) => o.replace(/\/+$/, '') === normalized)) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
     },
     pingTimeout: 30000,

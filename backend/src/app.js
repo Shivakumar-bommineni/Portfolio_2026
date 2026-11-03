@@ -45,20 +45,30 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-const allowedOrigins = [
+const rawOrigins = [
   process.env.FRONTEND_URL,
   process.env.CLIENT_URL,
   'http://localhost:5173',
   'http://localhost:5174',
 ].filter(Boolean);
 
+const allowedOrigins = Array.from(
+  new Set([
+    ...rawOrigins,
+    ...rawOrigins.map((u) => u.replace(/\/+$/, '')),
+    ...rawOrigins.map((u) => `${u.replace(/\/+$/, '')}/`),
+  ])
+);
+
 app.use(cors({
   origin: (origin, callback) => {
     // allow requests with no origin (like mobile apps or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) return callback(null, true);
+    const normalized = origin.replace(/\/+$/, '');
+    if (allowedOrigins.some((o) => o.replace(/\/+$/, '') === normalized)) {
       return callback(null, true);
     }
-    return callback(null, true); // permissive for local dev
+    return callback(null, true); // permissive fallback
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
