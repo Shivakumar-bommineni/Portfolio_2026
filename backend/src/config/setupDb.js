@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { pool } = require('./database');
 
-const setup = async () => {
+const setup = async (closePool = false) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -69,6 +69,26 @@ const setup = async () => {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_otps_phone ON otps(phone);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_otps_expires ON otps(expires_at);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);`);
+
+    // ── MDM & Active User Sessions (Max 3 Devices) ────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        device_id VARCHAR(255) NOT NULL,
+        device_info VARCHAR(255),
+        location VARCHAR(255),
+        ip_address VARCHAR(50),
+        refresh_token_hash VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        is_revoked BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_active TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        revoked_at TIMESTAMP WITH TIME ZONE
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id, is_active, is_revoked);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_user_sessions_device ON user_sessions(device_id);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(actor_id);`);
 
     await client.query(`
@@ -193,16 +213,72 @@ const setup = async () => {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);`);
 
+    // ── Notifications System ─────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'Info',
+        for_role VARCHAR(50),
+        performed_by VARCHAR(100),
+        source_type VARCHAR(100),
+        metadata_json JSONB DEFAULT '{}',
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_isread ON notifications(user_id, is_read);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);`);
+
+    // Device Push Tokens for FCM
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_push_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        push_token TEXT NOT NULL UNIQUE,
+        device_type VARCHAR(20) DEFAULT 'WEB',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_user_push_tokens_user ON user_push_tokens(user_id);`);
+
+    // User Notification Preferences
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_notification_settings (
+        user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        training_assigned BOOLEAN DEFAULT TRUE,
+        training_completed BOOLEAN DEFAULT TRUE,
+        deadline_reminders BOOLEAN DEFAULT TRUE,
+        weekly_summary BOOLEAN DEFAULT FALSE,
+        compliance_alerts BOOLEAN DEFAULT TRUE,
+        system_updates BOOLEAN DEFAULT FALSE,
+        security_alerts BOOLEAN DEFAULT TRUE,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Database tables created/updated successfully');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('❌ Error:', err.message);
+    console.error('❌ Database migration error:', err.message);
     throw err;
   } finally {
     client.release();
-    await pool.end();
+    if (closePool) {
+      await pool.end();
+    }
   }
 };
 
-setup().catch((err) => { console.error(err); process.exit(1); });
+if (require.main === module) {
+  setup(true).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { setup };

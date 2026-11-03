@@ -4,6 +4,8 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { roleHome } from '../components/RoleRoute';
 import { useTheme } from '../context/ThemeContext';
+import SessionSelectionScreen from '../components/SessionSelectionScreen';
+import { getDeviceId, getDeviceInfo, getUserPinpointLocation } from '../utils/device';
 
 const SunIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -43,22 +45,49 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionSelectionData, setSessionSelectionData] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!phone || !password) { setError('Please fill in all fields'); return; }
     if (phone.replace(/\D/g, '').length !== 10) { setError('Enter a valid 10-digit phone number'); return; }
 
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
+    setSessionSelectionData(null);
+
     try {
-      const res = await authAPI.login({ phone: `+91${phone.replace(/\D/g, '')}`, password });
+      const deviceId = getDeviceId();
+      const deviceInfo = getDeviceInfo();
+      const location = await getUserPinpointLocation();
+
+      const res = await authAPI.login({
+        phone: `+91${phone.replace(/\D/g, '')}`,
+        password,
+        deviceId,
+        deviceInfo,
+        location,
+      });
+
       login(res.data.user);
       navigate(roleHome(), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      if (err.response?.status === 409 || err.response?.data?.requiresSessionSelection) {
+        setSessionSelectionData({
+          token: err.response.data.sessionSelectionToken,
+          sessions: err.response.data.activeSessions || [],
+        });
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSessionSelectionSuccess = (userData) => {
+    login(userData);
+    navigate(roleHome(), { replace: true });
   };
 
   return (
@@ -66,6 +95,7 @@ export default function Login() {
       height: '100vh', width: '100vw',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'var(--bg)', overflow: 'hidden', position: 'relative',
+      padding: '1rem',
     }}>
       {/* subtle background gradient */}
       <div style={{ position: 'absolute', inset: 0, background: 'var(--grad-soft)', pointerEvents: 'none' }} />
@@ -89,95 +119,161 @@ export default function Login() {
         Portfolio
       </Link>
 
-      {/* card */}
-      <div style={{
-        position: 'relative', zIndex: 1,
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 20,
-        padding: '2rem 2rem 1.625rem',
-        width: '100%', maxWidth: 400,
-        boxShadow: 'var(--shadow-lg)',
-      }}>
-        {/* logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1.625rem' }}>
-          <div className="sb-mark">
-            <span className="sb-mark-text">SB</span>
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>
-              ShivaKumar<span className="p-brand-accent">_B</span>
-            </div>
-            <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>Private Access</div>
-          </div>
-        </div>
-
-        <div style={{ fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-.4px', marginBottom: '.25rem' }}>
-          Welcome back
-        </div>
-        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: '1.375rem' }}>
-          Sign in to your private dashboard
-        </div>
-
-        {error && (
-          <div className="alert alert-error" style={{ marginBottom: '1rem', padding: '.625rem .875rem', fontSize: '.8rem' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ marginBottom: '.875rem' }}>
-            <label className="form-label">Mobile Number</label>
-            <div className="phone-group">
-              <div className="country-code">🇮🇳 +91</div>
-              <input
-                type="tel" className="form-input"
-                placeholder="10-digit number"
-                value={phone}
-                onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }}
-                maxLength={10} inputMode="numeric" autoComplete="tel"
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '1.125rem' }}>
-            <div style={{ marginBottom: '.3rem' }}>
-              <label className="form-label" style={{ margin: 0 }}>Password</label>
-            </div>
-            <div className="input-wrapper">
-              <span className="input-icon"><IconLock /></span>
-              <input
-                type={showPwd ? 'text' : 'password'} className="form-input"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                autoComplete="current-password"
-              />
-              <button type="button" className="input-action" onClick={() => setShowPwd(!showPwd)} tabIndex={-1}>
-                <IconEye open={showPwd} />
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary" disabled={loading}
-            style={{ width: '100%', padding: '.7rem', fontSize: '.9rem' }}>
-            {loading ? <><div className="spinner" /> Signing in…</> : 'Sign In →'}
-          </button>
-        </form>
-
+      {sessionSelectionData ? (
+        <SessionSelectionScreen
+          sessionSelectionToken={sessionSelectionData.token}
+          activeSessions={sessionSelectionData.sessions}
+          onSuccess={handleSessionSelectionSuccess}
+          onCancel={() => setSessionSelectionData(null)}
+        />
+      ) : (
+        /* card */
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '.5rem',
-          fontSize: '.72rem', color: 'var(--text-muted)',
-          padding: '.625rem .875rem',
-          background: 'var(--surface-alt)', borderRadius: 8, marginTop: '1.125rem',
+          position: 'relative', zIndex: 1,
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 20,
+          padding: '2rem 2rem 1.625rem',
+          width: '100%', maxWidth: 400,
+          boxShadow: 'var(--shadow-lg)',
         }}>
-          <div className="badge-dot" />
-          256-bit SSL · Cookie-Based JWT · Secure Access
+          {/* logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1.625rem' }}>
+            <div className="sb-mark">
+              <span className="sb-mark-text">SB</span>
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>
+                ShivaKumar<span className="p-brand-accent">_B</span>
+              </div>
+              <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>Private Access</div>
+            </div>
+          </div>
+
+          <div style={{ fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-.4px', marginBottom: '.25rem' }}>
+            Welcome back
+          </div>
+          <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: '1.375rem' }}>
+            Sign in to your private dashboard (Max 3 Active Devices)
+          </div>
+
+          {error && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              color: '#ef4444',
+              padding: '10px 12px',
+              borderRadius: 10,
+              fontSize: '12px',
+              marginBottom: '1.25rem',
+            }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Phone */}
+            <div>
+              <label style={{ display: 'block', fontSize: '.75rem', fontWeight: 600, color: 'var(--text-sec)', marginBottom: '.375rem' }}>
+                Phone Number
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <span style={{
+                  position: 'absolute', left: '12px', fontSize: '.84rem',
+                  fontWeight: 600, color: 'var(--text-muted)'
+                }}>+91</span>
+                <input
+                  type="tel"
+                  placeholder="9876543210"
+                  maxLength={10}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '.625rem .75rem .625rem 3rem',
+                    fontSize: '.84rem',
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-alt)',
+                    color: 'var(--text)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.375rem' }}>
+                <label style={{ fontSize: '.75rem', fontWeight: 600, color: 'var(--text-sec)' }}>
+                  Password
+                </label>
+                <Link to="/forgot-password" style={{ fontSize: '.72rem', color: 'var(--primary)', fontWeight: 600 }}>
+                  Forgot password?
+                </Link>
+              </div>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '.625rem 2.5rem .625rem .75rem',
+                    fontSize: '.84rem',
+                    borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface-alt)',
+                    color: 'var(--text)',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
+                  tabIndex={-1}
+                  style={{
+                    position: 'absolute', right: '10px',
+                    background: 'transparent', border: 'none',
+                    color: 'var(--text-muted)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: 4,
+                  }}
+                >
+                  <IconEye open={showPwd} />
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                marginTop: '.5rem',
+                padding: '.75rem',
+                borderRadius: 10,
+                border: 'none',
+                background: 'var(--grad, linear-gradient(135deg, #2563eb, #7c3aed))',
+                color: '#fff',
+                fontSize: '.84rem',
+                fontWeight: 700,
+                cursor: loading ? 'default' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '.5rem',
+              }}
+            >
+              <IconLock />
+              {loading ? 'Authenticating...' : 'Sign In'}
+            </button>
+          </form>
         </div>
-      </div>
+      )}
     </div>
   );
 }

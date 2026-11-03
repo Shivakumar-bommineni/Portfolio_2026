@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { notesAPI, interviewAPI, portfolioAPI } from '../services/api';
+import NotificationDropdown from '../components/NotificationDropdown';
 
 /* ── Icons ── */
 const BellIcon = () => (
@@ -101,6 +102,15 @@ const NAV_ITEMS = [
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'notifications', to: '/notifications', label: 'Notifications',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 01-3.46 0"></path>
       </svg>
     ),
   },
@@ -300,63 +310,7 @@ export default function Dashboard() {
           <div className="dash-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', position: 'relative' }}>
             
             {/* Notification Bell */}
-            <div style={{ position: 'relative' }}>
-              <div 
-                onClick={() => { setShowNotif(!showNotif); setShowProfile(false); }}
-                style={{ position: 'relative', cursor: 'pointer', color: showNotif ? 'var(--primary)' : 'var(--text-sec)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '.25rem' }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                <div style={{
-                  position: 'absolute', top: -2, right: -4, background: '#f59e0b',
-                  color: '#fff', fontSize: '9px', fontWeight: 800, padding: '1.5px 4.5px',
-                  borderRadius: '100px', lineHeight: 1, border: '2px solid var(--surface)'
-                }}>99+</div>
-              </div>
-
-              {/* Notifications Popover */}
-              {showNotif && (
-                <div style={{
-                  position: 'absolute', top: '100%', right: -10, marginTop: '1rem',
-                  width: 380, background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 16, boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-                  zIndex: 100, overflow: 'hidden', display: 'flex', flexDirection: 'column'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                      <span style={{ fontWeight: 800, color: 'var(--text)', fontSize: '1.05rem' }}>Notifications</span>
-                      <span style={{ background: '#fef3c7', color: '#d97706', fontSize: '.75rem', fontWeight: 800, padding: '.2rem .6rem', borderRadius: 100 }}>99+ new</span>
-                    </div>
-                    <span style={{ fontSize: '.8rem', color: '#d97706', fontWeight: 600, cursor: 'pointer' }}>Mark all read</span>
-                  </div>
-                  
-                  <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', gap: '1rem', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.background='var(--surface-alt)'} onMouseOut={e => e.currentTarget.style.background='transparent'}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', marginTop: '.4rem', flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.25rem' }}>
-                            <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
-                              {firstName} (Manager) has logged in
-                            </div>
-                            <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{i === 1 ? 'Just now' : `${i*5 + 12}h ago`}</div>
-                          </div>
-                          <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 260 }}>
-                            Manager {firstName} is now active...
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-                    <span style={{ color: '#d97706', fontWeight: 700, fontSize: '.85rem', cursor: 'pointer' }}>View all notifications</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationDropdown />
 
             {/* Theme Toggle */}
             <div onClick={toggle} style={{ cursor: 'pointer', color: 'var(--text-sec)', padding: '.25rem' }}>

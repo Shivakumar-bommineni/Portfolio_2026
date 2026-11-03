@@ -1,4 +1,7 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -17,9 +20,15 @@ const todoRoutes     = require('./routes/todos');
 const bookmarkRoutes = require('./routes/bookmarks');
 const projectRoutes  = require('./routes/projects');
 const contactRoutes  = require('./routes/contact');
+const notificationRoutes = require('./routes/notifications');
+const { initSocket } = require('./services/socketService');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io on the shared HTTP server
+initSocket(server);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -33,16 +42,29 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:5174',
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, true); // permissive for local dev
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Please try again later.' },
@@ -65,6 +87,7 @@ app.use('/api/todos',     todoRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/projects',  projectRoutes);
 app.use('/api/contact',   contactRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (_, res) => res.json({
   message: 'Hi Dev! 👋 shivakumar_dev backend is running.',
@@ -79,8 +102,10 @@ app.use((_, res) => res.status(404).json({ success: false, message: 'Route not f
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`)
-);
+if (require.main === module) {
+  server.listen(PORT, () =>
+    console.log(`🚀 Server + Socket.IO running on http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`)
+  );
+}
 
-module.exports = app;
+module.exports = { app, server };

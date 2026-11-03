@@ -3,15 +3,20 @@ import { authAPI } from '../services/api';
 import {
   TAB_ID, channel, broadcast,
   readAuth, writeAuth,
-  claimTab, releaseTab, isActiveTab,
 } from '../utils/tabSession';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(() => readAuth());   // instant from localStorage
-  const [loading, setLoading] = useState(!readAuth());        // skip spinner if cache hit
-  const [blockedTab, setBlockedTab] = useState(false);        // another tab owns the session
+  const [user, setUser]       = useState(() => readAuth());
+  const [loading, setLoading] = useState(!readAuth());
+
+  // Clean up legacy tab contention keys
+  try {
+    localStorage.removeItem('shiv_active_tab');
+  } catch (e) {
+    // ignore
+  }
 
   // ── Server session verification ──────────────────────────────────────────
   const checkAuth = useCallback(async (silent = false) => {
@@ -31,7 +36,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     checkAuth();
 
-    // Re-verify silently whenever this tab regains focus
+    // Re-verify silently whenever tab regains focus
     const onVisibility = () => {
       if (document.visibilityState === 'visible') checkAuth(true);
     };
@@ -39,7 +44,7 @@ export function AuthProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [checkAuth]);
 
-  // ── Cross-tab BroadcastChannel listener ──────────────────────────────────
+  // ── Cross-tab BroadcastChannel listener (Smooth multi-tab sync) ──────────
   useEffect(() => {
     if (!channel) return;
     const handleMsg = ({ data }) => {
@@ -48,77 +53,63 @@ export function AuthProvider({ children }) {
       if (data.type === 'LOGOUT') {
         writeAuth(null);
         setUser(null);
-        setBlockedTab(false);
         window.location.replace('/login');
       }
 
       if (data.type === 'LOGIN') {
-        // Another tab logged in — update local auth cache silently
-        if (data.user) { writeAuth(data.user); setUser(data.user); }
-      }
-
-      if (data.type === 'CLAIM') {
-        // Another tab claimed the session — block this tab if we also had a session
-        if (user) setBlockedTab(true);
+        // Another tab logged in — sync local auth silently without blocking
+        if (data.user) {
+          writeAuth(data.user);
+          setUser(data.user);
+        }
       }
     };
     channel.addEventListener('message', handleMsg);
     return () => channel.removeEventListener('message', handleMsg);
-  }, [user]);
+  }, []);
 
-  // ── localStorage 'storage' event (cross-tab fallback for LOGOUT) ─────────
+  // ── Cross-tab storage listener for sync ─────────────────────────────────
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === 'shiv_auth_user' && e.newValue === null) {
-        // Auth cleared in another tab — log this tab out too
-        setUser(null);
-        setBlockedTab(false);
-        window.location.replace('/login');
+      if (e.key === 'shiv_auth_user') {
+        if (e.newValue === null) {
+          setUser(null);
+          window.location.replace('/login');
+        } else {
+          try {
+            const u = JSON.parse(e.newValue);
+            setUser(u);
+          } catch (err) {
+            // ignore
+          }
+        }
       }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  // ── Release tab lock on unload ────────────────────────────────────────────
-  useEffect(() => {
-    window.addEventListener('beforeunload', releaseTab);
-    return () => window.removeEventListener('beforeunload', releaseTab);
-  }, []);
-
   // ── Public auth API ──────────────────────────────────────────────────────
   const login = (userData) => {
     writeAuth(userData);
     setUser(userData);
-    setBlockedTab(false);
-    claimTab();
     broadcast('LOGIN', { user: userData });
   };
 
   const logout = async (skipApi = false) => {
-    releaseTab();
     writeAuth(null);
     setUser(null);
-    setBlockedTab(false);
     broadcast('LOGOUT');
     if (!skipApi) {
       try { await authAPI.logout(); } catch { /* ignore */ }
     }
   };
 
-  // ── Check if another tab already owns the session ─────────────────────────
-  const claimSession = useCallback(() => {
-    if (!isActiveTab()) {
-      setBlockedTab(true);
-      return false;
-    }
-    claimTab();
-    broadcast('CLAIM');
-    return true;
-  }, []);
+  // Backwards compatible no-op claimSession
+  const claimSession = useCallback(() => true, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, blockedTab, login, logout, claimSession }}>
+    <AuthContext.Provider value={{ user, loading, blockedTab: false, login, logout, claimSession }}>
       {children}
     </AuthContext.Provider>
   );

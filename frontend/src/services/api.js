@@ -19,9 +19,23 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+    const errCode = error.response?.data?.code || error.response?.data?.error;
+
+    // Check for explicit session revocation by MDM limit displacement
+    if (error.response?.status === 401 && errCode === 'SESSION-REVOKED') {
+      window.dispatchEvent(
+        new CustomEvent('app:force-logout', {
+          detail: {
+            reason: error.response?.data?.message || 'Your session was terminated because another device logged in.',
+          },
+        })
+      );
+      return Promise.reject(error);
+    }
+
     if (
       error.response?.status === 401 &&
-      error.response?.data?.code === 'TOKEN_EXPIRED' &&
+      errCode === 'TOKEN_EXPIRED' &&
       !original._retry
     ) {
       if (isRefreshing) {
@@ -53,6 +67,9 @@ export const authAPI = {
   sendOTP: (phone) => api.post('/auth/send-otp', { phone }),
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  forceLogoutAndLogin: (data) => api.post('/auth/sessions/force-logout-and-login', data),
+  getActiveSessions: () => api.get('/auth/sessions'),
+  revokeSession: (sessionId) => api.delete(`/auth/sessions/${sessionId}`),
   forgotPasswordSendOTP: (phone) => api.post('/auth/forgot-password/send-otp', { phone }),
   resetPassword: (data) => api.post('/auth/forgot-password/reset', data),
   logout: () => api.post('/auth/logout'),
@@ -131,6 +148,19 @@ export const projectAPI = {
 
 export const contactAPI = {
   send: (data) => api.post('/contact', data),
+};
+
+export const notificationAPI = {
+  getAll: (params) => api.get('/notifications', { params }),
+  getUnreadCount: (params) => api.get('/notifications/unread-count', { params }),
+  markRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+  dismiss: (id) => api.delete(`/notifications/${id}`),
+  registerPushToken: (data) => api.post('/notifications/push-token', data),
+  unregisterPushToken: (data) => api.delete('/notifications/push-token', { data }),
+  getSettings: () => api.get('/notifications/settings'),
+  updateSettings: (data) => api.put('/notifications/settings', data),
+  sendTest: (data) => api.post('/notifications/test', data),
 };
 
 export const chatAPI = {

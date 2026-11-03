@@ -1,26 +1,36 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { query } = require('../config/database');
-const { generateOTP, hashOTP, verifyOTP } = require('../utils/otpGenerator');
-const { sendOTPSMS } = require('../utils/smsService');
 const {
   generateAccessToken,
   generateRefreshToken,
+  generateSessionSelectionToken,
   verifyRefreshToken,
+  verifySessionSelectionToken,
   setCookies,
   clearCookies,
 } = require('../utils/jwtHelper');
+const { generateOTP, hashOTP, verifyOTP } = require('../utils/otpGenerator');
+const { sendOTPSMS } = require('../utils/smsService');
+const { getIO } = require('../services/socketService');
+const { createAndSendNotification } = require('../services/notificationService');
 
-const OTP_EXPIRY_MS = 5 * 60 * 1000;
-const MAX_OTP_ATTEMPTS = 3;
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCK_DURATION_MS = 30 * 60 * 1000;
-const REFRESH_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+const LOCK_DURATION_MS = 30 * 60 * 1000;    // 30 minutes
+const OTP_EXPIRY_MS = 5 * 60 * 1000;         // 5 minutes
+const MAX_OTP_ATTEMPTS = 3;
+const REFRESH_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MAX_ACTIVE_SESSIONS = 3;               // MDM Active Session Limit
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
-const issueTokens = async (res, user) => {
-  const payload = { userId: user.id, phone: user.phone, role: user.role || 'user' };
+const issueTokens = async (res, user, session) => {
+  const payload = {
+    userId: user.id,
+    phone: user.phone,
+    role: user.role || 'user',
+    sessionId: session?.id || null,
+  };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
@@ -30,8 +40,23 @@ const issueTokens = async (res, user) => {
     [user.id, hashToken(refreshToken), new Date(Date.now() + REFRESH_EXPIRY_MS)]
   );
 
+  if (session?.id) {
+    await query(
+      'UPDATE user_sessions SET refresh_token_hash = $1, last_active = NOW() WHERE id = $2',
+      [hashToken(refreshToken), session.id]
+    );
+  }
+
   setCookies(res, accessToken, refreshToken);
-  return { id: user.id, phone: user.phone, fullName: user.full_name, email: user.email, role: user.role || 'user' };
+  return {
+    id: user.id,
+    phone: user.phone,
+    fullName: user.full_name,
+    email: user.email,
+    role: user.role || 'user',
+    sessionId: session?.id || null,
+    accessToken, // Dual-mode delivery for clients storing token locally
+  };
 };
 
 const sendRegistrationOTP = async (req, res) => {
@@ -71,7 +96,7 @@ const register = async (req, res) => {
     );
 
     if (!otpRow.rows.length) {
-      return res.status(400).json({ success: false, message: 'OTP expired or not requested. Please resend.' });
+      return res.status(400).json({ success: false, message: 'OTP expired or not found. Please request a new OTP.' });
     }
 
     const record = otpRow.rows[0];
@@ -93,7 +118,22 @@ const register = async (req, res) => {
       [phone, await bcrypt.hash(password, 12), fullName, email || null]
     );
 
-    const userData = await issueTokens(res, result.rows[0]);
+    const newUser = result.rows[0];
+
+    // Create initial session for registration
+    const deviceId = req.body.deviceId || crypto.randomUUID();
+    const deviceInfo = req.body.deviceInfo || req.headers['user-agent'] || 'Web Browser';
+    const location = req.body.location || 'Local Network';
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+
+    const sessionResult = await query(
+      `INSERT INTO user_sessions (user_id, device_id, device_info, location, ip_address, is_active, is_revoked)
+       VALUES ($1, $2, $3, $4, $5, TRUE, FALSE)
+       RETURNING *`,
+      [newUser.id, deviceId, deviceInfo, location, ipAddress]
+    );
+
+    const userData = await issueTokens(res, newUser, sessionResult.rows[0]);
     res.status(201).json({ success: true, message: 'Registration successful', user: userData });
   } catch (err) {
     console.error('register:', err);
@@ -106,7 +146,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { phone, password, deviceId, deviceInfo, location } = req.body;
 
     const result = await query('SELECT * FROM users WHERE phone=$1 AND is_active=TRUE', [phone]);
     if (!result.rows.length) {
@@ -138,11 +178,235 @@ const login = async (req, res) => {
       [user.id]
     );
 
-    const userData = await issueTokens(res, user);
-    res.json({ success: true, message: 'Login successful', user: userData });
+    // ── MDM / Session Limit Enforcement (Max 3 Devices) ───────────
+    const incomingDeviceId = deviceId || crypto.createHash('md5').update(`${req.ip}_${req.headers['user-agent']}`).digest('hex');
+    const clientDeviceInfo = deviceInfo || req.headers['user-agent'] || 'Web Browser';
+    const clientLocation   = location || 'Local Network';
+    const ipAddress        = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+
+    // Query active unrevoked sessions
+    const { rows: activeSessions } = await query(
+      `SELECT * FROM user_sessions 
+       WHERE user_id = $1 AND is_active = TRUE AND is_revoked = FALSE 
+       ORDER BY last_active DESC`,
+      [user.id]
+    );
+
+    // Check if current device already has an active session
+    const existingSession = activeSessions.find((s) => s.device_id === incomingDeviceId);
+
+    if (existingSession) {
+      // Refresh current device session
+      await query(
+        `UPDATE user_sessions 
+         SET last_active = NOW(), location = $1, ip_address = $2, device_info = $3
+         WHERE id = $4`,
+        [clientLocation, ipAddress, clientDeviceInfo, existingSession.id]
+      );
+      const userData = await issueTokens(res, user, existingSession);
+      return res.json({ success: true, message: 'Login successful', user: userData });
+    }
+
+    // New device: check if max session limit is reached
+    if (activeSessions.length >= MAX_ACTIVE_SESSIONS) {
+      const sessionSelectionToken = generateSessionSelectionToken({
+        userId: user.id,
+        phone: user.phone,
+      });
+
+      const formattedSessions = activeSessions.map((s) => ({
+        sessionId: s.id,
+        deviceId: s.device_id,
+        deviceInfo: s.device_info || 'Unknown Device',
+        location: s.location || 'Unknown Location',
+        ipAddress: s.ip_address || '127.0.0.1',
+        loginTime: s.created_at,
+        lastActive: s.last_active,
+      }));
+
+      return res.status(409).json({
+        success: false,
+        requiresSessionSelection: true,
+        message: 'Active session limit reached (maximum 3 devices). Select a device session to terminate and replace.',
+        sessionSelectionToken,
+        activeSessions: formattedSessions,
+      });
+    }
+
+    // Active session count is < 3: create new session
+    const { rows: newSessionRows } = await query(
+      `INSERT INTO user_sessions (user_id, device_id, device_info, location, ip_address, is_active, is_revoked)
+       VALUES ($1, $2, $3, $4, $5, TRUE, FALSE)
+       RETURNING *`,
+      [user.id, incomingDeviceId, clientDeviceInfo, clientLocation, ipAddress]
+    );
+    const newSession = newSessionRows[0];
+
+    // Send security notification about new device login
+    createAndSendNotification({
+      userId: user.id,
+      title: 'Security Alert: New Device Login',
+      message: `New login from ${clientDeviceInfo} (${clientLocation}). Active devices: ${activeSessions.length + 1}/${MAX_ACTIVE_SESSIONS}.`,
+      type: 'Security',
+      metadata: { deviceId: incomingDeviceId, sessionId: newSession.id },
+    }).catch(() => {});
+
+    const userData = await issueTokens(res, user, newSession);
+    return res.json({ success: true, message: 'Login successful', user: userData });
   } catch (err) {
     console.error('login:', err);
     res.status(500).json({ success: false, message: 'Login failed' });
+  }
+};
+
+const forceLogoutAndLogin = async (req, res) => {
+  try {
+    const { sessionSelectionToken, sessionIdToRevoke, deviceId, deviceInfo, location } = req.body;
+
+    if (!sessionSelectionToken || !sessionIdToRevoke) {
+      return res.status(400).json({ success: false, message: 'sessionSelectionToken and sessionIdToRevoke are required' });
+    }
+
+    let decoded;
+    try {
+      decoded = verifySessionSelectionToken(sessionSelectionToken);
+    } catch {
+      return res.status(401).json({ success: false, message: 'Session selection expired. Please sign in again.' });
+    }
+
+    const userResult = await query('SELECT * FROM users WHERE id = $1 AND is_active = TRUE', [decoded.userId]);
+    if (!userResult.rows.length) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    const user = userResult.rows[0];
+
+    // Find session to revoke
+    const { rows: revokeTarget } = await query(
+      'SELECT * FROM user_sessions WHERE id = $1 AND user_id = $2',
+      [sessionIdToRevoke, user.id]
+    );
+
+    if (!revokeTarget.length) {
+      return res.status(404).json({ success: false, message: 'Target session not found' });
+    }
+    const oldSession = revokeTarget[0];
+
+    // 1. Mark old session as revoked
+    await query(
+      'UPDATE user_sessions SET is_active = FALSE, is_revoked = TRUE, revoked_at = NOW() WHERE id = $1',
+      [sessionIdToRevoke]
+    );
+
+    // 2. Real-time remote termination on displaced device via Socket.io
+    try {
+      const io = getIO();
+      io.to(`session:${sessionIdToRevoke}`).emit('ForceLogout', {
+        reason: 'Another device logged in and replaced this session.',
+        displacedBy: deviceInfo || 'Another Device',
+      });
+    } catch (e) {
+      console.warn('Socket emit ForceLogout failed:', e.message);
+    }
+
+    // 3. Send security notification
+    createAndSendNotification({
+      userId: user.id,
+      title: 'Security Alert: Device Displaced',
+      message: `Session for "${oldSession.device_info || 'Device'}" was terminated because a new device logged in.`,
+      type: 'Security',
+      metadata: { revokedSessionId: sessionIdToRevoke },
+    }).catch(() => {});
+
+    // 4. Create new session for this incoming device
+    const incomingDeviceId = deviceId || crypto.createHash('md5').update(`${req.ip}_${req.headers['user-agent']}`).digest('hex');
+    const clientDeviceInfo = deviceInfo || req.headers['user-agent'] || 'Web Browser';
+    const clientLocation   = location || 'Local Network';
+    const ipAddress        = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+
+    const { rows: newSessionRows } = await query(
+      `INSERT INTO user_sessions (user_id, device_id, device_info, location, ip_address, is_active, is_revoked)
+       VALUES ($1, $2, $3, $4, $5, TRUE, FALSE)
+       RETURNING *`,
+      [user.id, incomingDeviceId, clientDeviceInfo, clientLocation, ipAddress]
+    );
+    const newSession = newSessionRows[0];
+
+    const userData = await issueTokens(res, user, newSession);
+    res.json({
+      success: true,
+      message: 'Session replaced and login successful',
+      user: userData,
+    });
+  } catch (err) {
+    console.error('forceLogoutAndLogin:', err);
+    res.status(500).json({ success: false, message: 'Failed to replace session' });
+  }
+};
+
+const getActiveSessions = async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const currentSessionId = req.user.sessionId;
+
+    const { rows } = await query(
+      `SELECT id, device_id, device_info, location, ip_address, created_at, last_active, is_active
+       FROM user_sessions 
+       WHERE user_id = $1 AND is_active = TRUE AND is_revoked = FALSE 
+       ORDER BY last_active DESC`,
+      [userId]
+    );
+
+    const sessions = rows.map((s) => ({
+      sessionId: s.id,
+      deviceId: s.device_id,
+      deviceInfo: s.device_info || 'Unknown Device',
+      location: s.location || 'Unknown Location',
+      ipAddress: s.ip_address || '127.0.0.1',
+      loginTime: s.created_at,
+      lastActive: s.last_active,
+      isCurrent: s.id === currentSessionId,
+    }));
+
+    res.json({ success: true, activeSessions: sessions, maxAllowed: MAX_ACTIVE_SESSIONS });
+  } catch (err) {
+    console.error('getActiveSessions:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve active sessions' });
+  }
+};
+
+const revokeSession = async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const { sessionId } = req.params;
+
+    const { rows } = await query(
+      'SELECT * FROM user_sessions WHERE id = $1 AND user_id = $2',
+      [sessionId, userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Session not found' });
+    }
+
+    await query(
+      'UPDATE user_sessions SET is_active = FALSE, is_revoked = TRUE, revoked_at = NOW() WHERE id = $1',
+      [sessionId]
+    );
+
+    // Emit real-time ForceLogout
+    try {
+      const io = getIO();
+      io.to(`session:${sessionId}`).emit('ForceLogout', {
+        reason: 'Session was manually revoked from your account settings.',
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({ success: true, message: 'Session revoked successfully' });
+  } catch (err) {
+    console.error('revokeSession:', err);
+    res.status(500).json({ success: false, message: 'Failed to revoke session' });
   }
 };
 
@@ -209,6 +473,9 @@ const resetPassword = async (req, res) => {
     );
     await query('DELETE FROM refresh_tokens WHERE user_id=$1', [userId]);
 
+    // Revoke all existing sessions on password reset
+    await query('UPDATE user_sessions SET is_active=FALSE, is_revoked=TRUE, revoked_at=NOW() WHERE user_id=$1', [userId]);
+
     clearCookies(res);
     res.json({ success: true, message: 'Password reset successful. Please log in.' });
   } catch (err) {
@@ -219,7 +486,7 @@ const resetPassword = async (req, res) => {
 
 const refreshToken = async (req, res) => {
   try {
-    const token = req.cookies.refresh_token;
+    const token = req.cookies.refresh_token || req.cookies.cp_refresh_token || req.body.refreshToken;
     if (!token) return res.status(401).json({ success: false, message: 'Refresh token required' });
 
     let decoded;
@@ -228,6 +495,25 @@ const refreshToken = async (req, res) => {
     } catch {
       clearCookies(res);
       return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    // Check MDM session status
+    let session = null;
+    if (decoded.sessionId) {
+      const sessionResult = await query(
+        'SELECT * FROM user_sessions WHERE id = $1',
+        [decoded.sessionId]
+      );
+      if (!sessionResult.rows.length || !sessionResult.rows[0].is_active || sessionResult.rows[0].is_revoked) {
+        clearCookies(res);
+        return res.status(401).json({
+          success: false,
+          error: 'SESSION-REVOKED',
+          code: 'SESSION-REVOKED',
+          message: 'Your session was terminated from another device.',
+        });
+      }
+      session = sessionResult.rows[0];
     }
 
     const stored = await query(
@@ -244,7 +530,7 @@ const refreshToken = async (req, res) => {
     if (!userResult.rows.length) return res.status(401).json({ success: false, message: 'User not found' });
 
     await query('DELETE FROM refresh_tokens WHERE id=$1', [stored.rows[0].id]);
-    const userData = await issueTokens(res, userResult.rows[0]);
+    const userData = await issueTokens(res, userResult.rows[0], session);
     res.json({ success: true, user: userData });
   } catch (err) {
     console.error('refreshToken:', err);
@@ -255,9 +541,17 @@ const refreshToken = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    const token = req.cookies.refresh_token;
+    const token = req.cookies.refresh_token || req.cookies.cp_refresh_token;
     if (token) {
       await query('DELETE FROM refresh_tokens WHERE token_hash=$1', [hashToken(token)]);
+    }
+
+    // Revoke current session in database
+    if (req.user?.sessionId) {
+      await query(
+        'UPDATE user_sessions SET is_active=FALSE, is_revoked=TRUE, revoked_at=NOW() WHERE id=$1',
+        [req.user.sessionId]
+      );
     }
   } finally {
     clearCookies(res);
@@ -275,7 +569,16 @@ const getMe = async (req, res) => {
     const u = result.rows[0];
     res.json({
       success: true,
-      user: { id: u.id, phone: u.phone, fullName: u.full_name, email: u.email, role: u.role, isPhoneVerified: u.is_phone_verified, createdAt: u.created_at },
+      user: {
+        id: u.id,
+        phone: u.phone,
+        fullName: u.full_name,
+        email: u.email,
+        role: u.role,
+        isPhoneVerified: u.is_phone_verified,
+        createdAt: u.created_at,
+        sessionId: req.user.sessionId || null,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch user' });
@@ -283,7 +586,15 @@ const getMe = async (req, res) => {
 };
 
 module.exports = {
-  sendRegistrationOTP, register, login,
-  sendForgotPasswordOTP, resetPassword,
-  refreshToken, logout, getMe,
+  sendRegistrationOTP,
+  register,
+  login,
+  forceLogoutAndLogin,
+  getActiveSessions,
+  revokeSession,
+  sendForgotPasswordOTP,
+  resetPassword,
+  refreshToken,
+  logout,
+  getMe,
 };

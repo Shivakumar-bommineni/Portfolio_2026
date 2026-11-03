@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import { portfolioAPI, contactAPI } from "../services/api";
 import PortfolioChat from "../components/PortfolioChat";
 
@@ -282,6 +283,7 @@ const LEVEL_PCT = { Expert: 100, Advanced: 80, Intermediate: 60, Beginner: 40 };
 
 export default function Portfolio() {
   const { theme, toggle } = useTheme();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [cfg, setCfg] = useState(DEFAULT_CONFIG);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -614,8 +616,8 @@ export default function Portfolio() {
             <button className="theme-btn" onClick={toggle} title="Toggle theme">
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
-            <button className="login-btn" onClick={() => navigate("/login")}>
-              Owner Login
+            <button className="login-btn" onClick={() => navigate(user ? "/dashboard" : "/login")}>
+              {user ? "Dashboard" : "Owner Login"}
             </button>
           </div>
         </div>

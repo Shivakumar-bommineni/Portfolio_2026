@@ -41,6 +41,11 @@ router.post('/login',
   ctrl.login
 );
 
+// MDM Session Selection & Replacement
+router.post('/sessions/force-logout-and-login', ctrl.forceLogoutAndLogin);
+router.get('/sessions', authenticate, ctrl.getActiveSessions);
+router.delete('/sessions/:sessionId', authenticate, ctrl.revokeSession);
+
 router.post('/forgot-password/send-otp', otpLimiter, [phoneRule], validate, ctrl.sendForgotPasswordOTP);
 
 router.post('/forgot-password/reset',
