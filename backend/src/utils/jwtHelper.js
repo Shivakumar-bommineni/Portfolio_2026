@@ -50,7 +50,7 @@ const setCookies = (res, accessToken, refreshToken) => {
   const cookieOpts = {
     httpOnly: true,
     secure: isProd(),
-    sameSite: isProd() ? 'strict' : 'lax',
+    sameSite: isProd() ? 'none' : 'lax', // 'none' required for cross-domain HTTPS (e.g. Vercel frontend to Render backend)
     path: '/',
   };
 

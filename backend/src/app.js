@@ -27,6 +27,9 @@ const { errorHandler } = require('./middleware/errorHandler');
 const app = express();
 const server = http.createServer(app);
 
+// Trust first proxy (required for secure cookies & HTTPS recognition on Render / Railway / Vercel)
+app.set('trust proxy', 1);
+
 // Initialize Socket.io on the shared HTTP server
 initSocket(server);
 
