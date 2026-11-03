@@ -17,8 +17,11 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    // Connect to backend via proxy or VITE_API_URL
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Connect to backend via proxy or VITE_API_URL or production default
+    const defaultSocketUrl = import.meta.env.PROD
+      ? 'https://portfolio-2026-arz2.onrender.com'
+      : 'http://localhost:5000';
+    const socketUrl = import.meta.env.VITE_API_URL || defaultSocketUrl;
     const socket = io(socketUrl, {
       withCredentials: true,
       transports: ['websocket', 'polling'],

@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL.replace(/\/+$/, '')}/api`
-  : '/api';
+const defaultBackendUrl = import.meta.env.PROD
+  ? 'https://portfolio-2026-arz2.onrender.com'
+  : '';
+
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || defaultBackendUrl).replace(/\/+$/, '');
+const apiBaseUrl = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
 
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -171,7 +174,7 @@ export const chatAPI = {
   status: () => api.get('/chat/status'),
   // Returns a raw fetch Response with streaming body — not axios
   stream: (messages) =>
-    fetch('/api/chat', {
+    fetch(`${apiBaseUrl}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages }),
