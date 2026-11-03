@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -267,8 +267,26 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ notes: 0, mastered: 0, total_iq: 0, projects: 0 });
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const profileRef = useRef(null);
 
-    useEffect(() => {
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfile(false);
+      }
+    };
+    if (showProfile) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('touchstart', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [showProfile]);
+
+  useEffect(() => {
     const load = async () => {
       try {
         const [nr, ir, pr] = await Promise.all([notesAPI.getAll(), interviewAPI.getAll(), portfolioAPI.get()]);
@@ -283,7 +301,11 @@ export default function Dashboard() {
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const firstName = user?.fullName?.split(' ')[0] || 'Shivakumar';
+  
+  // Format display name and initials (replaces generic 'Super' with 'Shivakumar' or user's real name)
+  const isSuper = user?.fullName && user.fullName.toLowerCase().includes('super');
+  const displayName = isSuper ? 'Shivakumar' : (user?.fullName?.split(' ')[0] || 'Shivakumar');
+  const avatarInitials = isSuper ? 'SB' : (user?.fullName?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || 'SB');
   const masteredPct = stats.total_iq > 0 ? Math.round((stats.mastered / stats.total_iq) * 100) : 0;
 
   const techStack = [
@@ -351,7 +373,7 @@ export default function Dashboard() {
             </div>
 
             {/* User Pill */}
-            <div style={{ position: 'relative' }}>
+            <div ref={profileRef} style={{ position: 'relative' }}>
               <div 
                 onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }}
                 style={{
@@ -363,13 +385,15 @@ export default function Dashboard() {
                   backgroundColor: 'var(--surface)', transition: 'all .2s'
                 }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: '50%', background: '#d97706',
+                  width: 32, height: 32, borderRadius: '50%', background: 'var(--grad)',
                   color: '#fff', fontSize: '.8rem', fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  {firstName[0]}S
+                  {avatarInitials}
                 </div>
-                <span style={{ fontSize: '.85rem', fontWeight: 700, color: 'var(--text)' }}>Admin</span>
+                <span style={{ fontSize: '.85rem', fontWeight: 700, color: 'var(--text)' }}>
+                  {displayName}
+                </span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" style={{ transform: showProfile ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><polyline points="6 9 12 15 18 9"/></svg>
               </div>
 
@@ -377,53 +401,62 @@ export default function Dashboard() {
               {showProfile && (
                 <div style={{
                   position: 'absolute', top: '100%', right: 0, marginTop: '1rem',
-                  width: 320, background: 'var(--surface)', border: '1px solid var(--border)',
-                  borderRadius: 16, boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-                  zIndex: 100, padding: '1.25rem'
+                  width: 300, background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 18, boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
+                  zIndex: 100, padding: '1.25rem',
+                  animation: 'fadeInMenu .2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                 }}>
                   {/* User Info */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#d97706', color: '#fff', fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {firstName[0]}S
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--grad)', color: '#fff', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(37,99,235,0.25)' }}>
+                      {avatarInitials}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: '1.05rem', marginBottom: '.15rem' }}>{user?.fullName || 'Shivakumar Bommineni'}</div>
-                      <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: '.95rem', marginBottom: '.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user?.fullName || 'Shivakumar Bommineni'}
+                      </div>
+                      <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '.35rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        {user?.email || 'shiv.b@hyd.chrpindia.com'}
+                        <span>{user?.email || 'shiv.b@hyd.chrpindia.com'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ height: 1, background: 'var(--border)', margin: '0 -1.25rem 1rem' }} />
-
-                  {/* Switch Role */}
-                  <div style={{ fontSize: '.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '.75rem' }}>Switch Role</div>
-                  <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1.25rem' }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', background: '#4f46e5', color: '#fff', padding: '.6rem 0', borderRadius: 100, fontSize: '.8rem', fontWeight: 700, cursor: 'pointer' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                      Admin
+                  {/* Active Security Summary Card */}
+                  <div style={{
+                    background: 'var(--surface-alt)',
+                    borderRadius: 12,
+                    padding: '.75rem .9rem',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '.35rem',
+                    fontSize: '.75rem',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Status</span>
+                      <span style={{ fontWeight: 700, color: '#10b981', display: 'flex', alignItems: 'center', gap: '.3rem' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+                        MDM Protected
+                      </span>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-sec)', padding: '.6rem 0', borderRadius: 100, fontSize: '.8rem', fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      Manager
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-sec)', padding: '.6rem 0', borderRadius: 100, fontSize: '.8rem', fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                      Trainer
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Concurrency</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text)' }}>3 Devices Allowed</span>
                     </div>
                   </div>
 
-                  <div style={{ height: 1, background: 'var(--border)', margin: '0 -1.25rem 1rem' }} />
-
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: '.75rem' }}>
-                    <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', padding: '.75rem', background: 'transparent', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text-sec)', fontSize: '.9rem', fontWeight: 600, cursor: 'pointer' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  <div style={{ display: 'flex', gap: '.6rem' }}>
+                    <button 
+                      onClick={() => { setShowProfile(false); navigate('/portfolio-editor'); }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', padding: '.7rem', background: 'transparent', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-sec)', fontSize: '.84rem', fontWeight: 600, cursor: 'pointer', transition: 'all .15s' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                       Settings
                     </button>
-                    <button onClick={async () => { await logout(); navigate('/', { replace: true }); }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', padding: '.75rem', background: '#ef4444', border: 'none', borderRadius: 12, color: '#fff', fontSize: '.9rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <button onClick={async () => { await logout(); navigate('/', { replace: true }); }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', padding: '.7rem', background: '#ef4444', border: 'none', borderRadius: 10, color: '#fff', fontSize: '.84rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                       Sign out
                     </button>
                   </div>
@@ -445,7 +478,7 @@ export default function Dashboard() {
                   {greeting} 👋
                 </div>
                 <div style={{ fontSize: '1.7rem', fontWeight: 900, letterSpacing: '-.5px', lineHeight: 1.2, marginBottom: '.5rem' }}>
-                  Welcome back, <br />{firstName}!
+                  Welcome back, <br />{displayName}!
                 </div>
                 <div style={{ fontSize: '.875rem', opacity: .75, maxWidth: 360, lineHeight: 1.6 }}>
                   Your personal developer workspace — notes, prep, portfolio, all in one place.
@@ -474,9 +507,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               </div>
-              <div className="dash-welcome-avatar">{
-                user?.fullName?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || 'SB'
-              }</div>
+              <div className="dash-welcome-avatar">{avatarInitials}</div>
             </div>
           </div>
 
