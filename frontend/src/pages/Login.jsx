@@ -91,32 +91,37 @@ export default function Login() {
   };
 
   return (
-    <div style={{
-      height: '100vh', width: '100vw',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg)', overflow: 'hidden', position: 'relative',
-      padding: '1rem',
-    }}>
-      {/* subtle background gradient */}
-      <div style={{ position: 'absolute', inset: 0, background: 'var(--grad-soft)', pointerEvents: 'none' }} />
+    <div className="login-page-container">
+      {/* Dynamic ambient floating glowing orbs */}
+      <div className="login-orb login-orb-1" />
+      <div className="login-orb login-orb-2" />
+      <div style={{ position: 'absolute', inset: 0, background: 'var(--grad-soft)', pointerEvents: 'none', opacity: 0.6 }} />
 
       {/* theme toggle — top right corner */}
       <button className="theme-btn" onClick={toggle} title="Toggle theme"
-        style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10 }}>
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
         {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
       </button>
 
       {/* back to portfolio — top left */}
       <Link to="/" style={{
-        position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 10,
-        display: 'flex', alignItems: 'center', gap: '.375rem',
-        fontSize: '.78rem', color: 'var(--text-muted)', fontWeight: 500,
-        textDecoration: 'none', transition: 'color .15s',
+        position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 10,
+        display: 'flex', alignItems: 'center', gap: '.5rem',
+        fontSize: '.82rem', color: 'var(--text-muted)', fontWeight: 600,
+        textDecoration: 'none', transition: 'all .2s ease',
+        background: 'var(--surface-alt)', padding: '.45rem .85rem',
+        borderRadius: '10px', border: '1px solid var(--border)',
       }}
-        onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'}
-        onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Portfolio
+        onMouseOver={(e) => {
+          e.currentTarget.style.color = 'var(--primary)';
+          e.currentTarget.style.transform = 'translateX(-3px)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.color = 'var(--text-muted)';
+          e.currentTarget.style.transform = 'translateX(0)';
+        }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Portfolio
       </Link>
 
       {sessionSelectionData ? (
@@ -127,121 +132,120 @@ export default function Login() {
           onCancel={() => setSessionSelectionData(null)}
         />
       ) : (
-        /* card */
-        <div style={{
-          position: 'relative', zIndex: 1,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 20,
-          padding: '2rem 2rem 1.625rem',
-          width: '100%', maxWidth: 400,
-          boxShadow: 'var(--shadow-lg)',
-        }}>
-          {/* logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1.625rem' }}>
-            <div className="sb-mark">
-              <span className="sb-mark-text">SB</span>
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>
-                ShivaKumar<span className="p-brand-accent">_B</span>
+        /* modern card */
+        <div className="modern-login-card">
+          {/* Top badge & header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+              <div className="sb-mark" style={{ width: 38, height: 38, fontSize: '1rem' }}>
+                <span className="sb-mark-text">SB</span>
               </div>
-              <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>Private Access</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '.95rem', lineHeight: 1.2 }}>
+                  ShivaKumar<span className="p-brand-accent">_B</span>
+                </div>
+                <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Private Workspace</div>
+              </div>
+            </div>
+
+            {/* Active MDM Security Pill */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+              padding: '.25rem .6rem', borderRadius: '20px',
+              background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)',
+              fontSize: '.68rem', fontWeight: 700, color: '#10b981',
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', background: '#10b981',
+                animation: 'pulseGlow 2s infinite',
+              }} />
+              MDM Active (3 Devices)
             </div>
           </div>
 
-          <div style={{ fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-.4px', marginBottom: '.25rem' }}>
-            Welcome back
+          <div style={{ fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-.4px', marginBottom: '.35rem' }}>
+            Owner Login
           </div>
-          <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: '1.375rem' }}>
-            Sign in to your private dashboard (Max 3 Active Devices)
+          <div style={{ fontSize: '.84rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.45 }}>
+            Access your secure developer dashboard and portfolio manager.
           </div>
 
           {error && (
             <div style={{
               background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
               color: '#ef4444',
-              padding: '10px 12px',
-              borderRadius: 10,
-              fontSize: '12px',
+              padding: '.75rem 1rem',
+              borderRadius: 12,
+              fontSize: '.82rem',
+              fontWeight: 500,
               marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '.5rem',
+              animation: 'slideInToast .25s ease-out',
             }}>
-              {error}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
             {/* Phone */}
             <div>
-              <label style={{ display: 'block', fontSize: '.75rem', fontWeight: 600, color: 'var(--text-sec)', marginBottom: '.375rem' }}>
+              <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 700, color: 'var(--text-sec)', marginBottom: '.4rem' }}>
                 Phone Number
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <span style={{
-                  position: 'absolute', left: '12px', fontSize: '.84rem',
-                  fontWeight: 600, color: 'var(--text-muted)'
+                  position: 'absolute', left: '12px', fontSize: '.88rem',
+                  fontWeight: 700, color: 'var(--text-muted)'
                 }}>+91</span>
                 <input
+                  className="modern-login-input"
                   type="tel"
-                  placeholder="9876543210"
+                  placeholder="7991234567"
                   maxLength={10}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '.625rem .75rem .625rem 3rem',
-                    fontSize: '.84rem',
-                    borderRadius: 10,
-                    border: '1px solid var(--border)',
-                    background: 'var(--surface-alt)',
-                    color: 'var(--text)',
-                    outline: 'none',
-                  }}
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.375rem' }}>
-                <label style={{ fontSize: '.75rem', fontWeight: 600, color: 'var(--text-sec)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.4rem' }}>
+                <label style={{ fontSize: '.78rem', fontWeight: 700, color: 'var(--text-sec)' }}>
                   Password
                 </label>
-                <Link to="/forgot-password" style={{ fontSize: '.72rem', color: 'var(--primary)', fontWeight: 600 }}>
+                <Link to="/forgot-password" style={{ fontSize: '.75rem', color: 'var(--primary)', fontWeight: 600 }}>
                   Forgot password?
                 </Link>
               </div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
+                  className="modern-login-input"
                   type={showPwd ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '.625rem 2.5rem .625rem .75rem',
-                    fontSize: '.84rem',
-                    borderRadius: 10,
-                    border: '1px solid var(--border)',
-                    background: 'var(--surface-alt)',
-                    color: 'var(--text)',
-                    outline: 'none',
-                  }}
+                  style={{ paddingRight: '2.75rem', paddingLeft: '1rem' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
                   tabIndex={-1}
                   style={{
-                    position: 'absolute', right: '10px',
+                    position: 'absolute', right: '12px',
                     background: 'transparent', border: 'none',
                     color: 'var(--text-muted)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: 4,
+                    padding: 4, transition: 'color .15s',
                   }}
+                  onMouseOver={(e) => e.currentTarget.style.color = 'var(--text)'}
+                  onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
                 >
                   <IconEye open={showPwd} />
                 </button>
@@ -249,27 +253,21 @@ export default function Login() {
             </div>
 
             <button
+              className="login-btn-submit"
               type="submit"
               disabled={loading}
-              style={{
-                marginTop: '.5rem',
-                padding: '.75rem',
-                borderRadius: 10,
-                border: 'none',
-                background: 'var(--grad, linear-gradient(135deg, #2563eb, #7c3aed))',
-                color: '#fff',
-                fontSize: '.84rem',
-                fontWeight: 700,
-                cursor: loading ? 'default' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '.5rem',
-              }}
             >
-              <IconLock />
-              {loading ? 'Authenticating...' : 'Sign In'}
+              {loading ? (
+                <>
+                  <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                  <span>Verifying Session...</span>
+                </>
+              ) : (
+                <>
+                  <IconLock />
+                  <span>Sign In Securely</span>
+                </>
+              )}
             </button>
           </form>
         </div>

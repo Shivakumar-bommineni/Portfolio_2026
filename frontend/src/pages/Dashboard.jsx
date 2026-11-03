@@ -135,15 +135,25 @@ export function DashSidebar({ active }) {
   return (
     <div className="dash-sidebar">
       {/* Identity — single unified header */}
-      <div className="dash-profile">
-          <div className="sb-mark" style={{ width: 40, height: 40, borderRadius: 10, fontSize: '1rem', flexShrink: 0, background: '#f59e0b', boxShadow: 'none' }}>SB</div>
-          <div className="dash-profile-info">
-            <div className="dash-profile-name" style={{ fontSize: '1rem', fontWeight: 900 }}>Workspace</div>
-            <div className="dash-profile-role" style={{ color: 'var(--text-muted)' }}>
-              Developer Hub
+      <div className="dash-profile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', height: 'auto', padding: '1.25rem 1.5rem', gap: '.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', width: '100%' }}>
+          <div className="sb-mark" style={{ width: 36, height: 36, borderRadius: 10, fontSize: '.9rem', flexShrink: 0, background: 'var(--grad)', boxShadow: '0 4px 12px rgba(37,99,235,0.25)' }}>SB</div>
+          <div className="dash-profile-info" style={{ flex: 1, minWidth: 0 }}>
+            <div className="dash-profile-name" style={{ fontSize: '.95rem', fontWeight: 800 }}>
+              ShivaKumar<span className="p-brand-accent">_B</span>
+            </div>
+            <div className="dash-profile-role" style={{ color: 'var(--text-muted)', fontSize: '.72rem', fontWeight: 600 }}>
+              Developer Workspace
             </div>
           </div>
         </div>
+
+        {/* MDM Protected Live Pill */}
+        <div className="glass-pill glass-pill-success" style={{ fontSize: '.68rem', padding: '.2rem .6rem' }}>
+          <span className="pulse-dot" style={{ background: '#10b981' }} />
+          <span>MDM Active · Max 3 Devices</span>
+        </div>
+      </div>
 
       {/* Nav */}
       <nav className="dash-nav">
@@ -302,13 +312,36 @@ export default function Dashboard() {
       <div className="dash-main">
         {/* Top bar */}
         <header className="dash-topbar" style={{ padding: '0 2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', fontSize: '.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-            <span style={{ cursor: 'pointer' }}>Workspace</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            <span style={{ color: 'var(--text)', fontWeight: 700 }}>Dashboard</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', fontSize: '.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+              <span style={{ cursor: 'pointer' }}>Workspace</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span style={{ color: 'var(--text)', fontWeight: 700 }}>Dashboard</span>
+            </div>
+
+            {/* Cloud & Database Live Badge */}
+            <div className="glass-pill glass-pill-primary" style={{ display: 'none', md: 'inline-flex' }}>
+              <span className="pulse-dot" style={{ background: '#3b82f6' }} />
+              <span>Neon DB · Live</span>
+            </div>
           </div>
+
           <div className="dash-topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', position: 'relative' }}>
             
+            {/* Direct Link to Live Portfolio */}
+            <Link to="/" target="_blank" rel="noreferrer" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+              fontSize: '.78rem', fontWeight: 700, color: 'var(--text-sec)',
+              padding: '.35rem .75rem', borderRadius: 8,
+              background: 'var(--surface-alt)', border: '1px solid var(--border)',
+              textDecoration: 'none', transition: 'all .15s',
+            }}
+              onMouseOver={(e) => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-sec)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
+              <span>Public Portfolio</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </Link>
+
             {/* Notification Bell */}
             <NotificationDropdown />
 
@@ -416,6 +449,29 @@ export default function Dashboard() {
                 </div>
                 <div style={{ fontSize: '.875rem', opacity: .75, maxWidth: 360, lineHeight: 1.6 }}>
                   Your personal developer workspace — notes, prep, portfolio, all in one place.
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+                  <button onClick={() => navigate('/portfolio-editor')} style={{
+                    padding: '.55rem 1.1rem', borderRadius: 10,
+                    background: '#fff', color: '#4f46e5',
+                    fontSize: '.82rem', fontWeight: 800, border: 'none',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.4rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    transition: 'transform .15s',
+                  }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Portfolio
+                  </button>
+                  <button onClick={() => navigate('/notes')} style={{
+                    padding: '.55rem 1.1rem', borderRadius: 10,
+                    background: 'rgba(255,255,255,0.18)', color: '#fff',
+                    fontSize: '.82rem', fontWeight: 700, border: '1px solid rgba(255,255,255,0.3)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.4rem',
+                    backdropFilter: 'blur(8px)',
+                  }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Quick Note
+                  </button>
                 </div>
               </div>
               <div className="dash-welcome-avatar">{
