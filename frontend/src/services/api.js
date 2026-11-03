@@ -14,6 +14,23 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Attach Bearer token to all requests for reliable cross-domain authentication
+api.interceptors.request.use((config) => {
+  try {
+    const raw = localStorage.getItem('shiv_auth_user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      const token = user?.accessToken || user?.token;
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -55,7 +72,27 @@ api.interceptors.response.use(
       original._retry = true;
       isRefreshing = true;
       try {
-        await api.post('/auth/refresh');
+        let refreshToken = null;
+        try {
+          const raw = localStorage.getItem('shiv_auth_user');
+          if (raw) refreshToken = JSON.parse(raw)?.refreshToken;
+        } catch {
+          // ignore
+        }
+
+        const res = await api.post('/auth/refresh', { refreshToken });
+        if (res.data?.user) {
+          try {
+            const raw = localStorage.getItem('shiv_auth_user');
+            const prev = raw ? JSON.parse(raw) : {};
+            localStorage.setItem('shiv_auth_user', JSON.stringify({ ...prev, ...res.data.user }));
+          } catch {
+            // ignore
+          }
+          if (res.data.user.accessToken) {
+            original.headers.Authorization = `Bearer ${res.data.user.accessToken}`;
+          }
+        }
         processQueue(null);
         return api(original);
       } catch (e) {

@@ -22,7 +22,10 @@ export function SocketProvider({ children }) {
       ? 'https://portfolio-2026-arz2.onrender.com'
       : 'http://localhost:5000';
     const socketUrl = import.meta.env.VITE_API_URL || defaultSocketUrl;
+    const token = user?.accessToken || user?.token;
     const socket = io(socketUrl, {
+      auth: { token },
+      query: { token },
       withCredentials: true,
       transports: ['websocket', 'polling'],
     });

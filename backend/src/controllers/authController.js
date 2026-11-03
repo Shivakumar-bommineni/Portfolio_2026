@@ -56,6 +56,7 @@ const issueTokens = async (res, user, session) => {
     role: user.role || 'user',
     sessionId: session?.id || null,
     accessToken, // Dual-mode delivery for clients storing token locally
+    refreshToken,
   };
 };
 

@@ -23,12 +23,16 @@ export function AuthProvider({ children }) {
     try {
       const res = await authAPI.getMe();
       const u = res.data.user;
-      writeAuth(u);
-      setUser(u);
+      const current = readAuth();
+      const merged = { ...current, ...u };
+      writeAuth(merged);
+      setUser(merged);
       if (!silent) setLoading(false);
-    } catch {
-      writeAuth(null);
-      setUser(null);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        writeAuth(null);
+        setUser(null);
+      }
       if (!silent) setLoading(false);
     }
   }, []);
