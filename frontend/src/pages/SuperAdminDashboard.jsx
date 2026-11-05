@@ -13,7 +13,7 @@ const Topbar = ({ user, onLogout }) => (
           <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
         </svg>
       </div>
-      Secure<span>Pay</span>
+      ShivaKumar<span style={{ color: '#7c3aed' }}>_B</span>
       <span style={{ background: '#7c3aed', color: 'white', fontSize: '.65rem', fontWeight: 700, padding: '.15rem .5rem', borderRadius: '100px', marginLeft: '.5rem' }}>
         SUPER ADMIN
       </span>

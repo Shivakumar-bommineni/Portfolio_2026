@@ -1,39 +1,71 @@
-const CACHE = 'shiv-dev-v1';
+const CACHE_NAME = 'shiv-pwa-v2';
 const OFFLINE_URL = '/';
 
-const PRECACHE = [
+const PRECACHE_ASSETS = [
   '/',
+  '/index.html',
   '/manifest.json',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  // Skip non-GET and API calls — always network for those
-  if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
 
-  e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        // Cache successful HTML/asset responses
-        if (res.ok && (e.request.destination === 'document' || e.request.destination === 'script' || e.request.destination === 'style')) {
-          const clone = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, clone));
-        }
-        return res;
-      })
-      .catch(() => caches.match(e.request).then((cached) => cached || caches.match(OFFLINE_URL)))
+  // Never cache or intercept non-GET, API calls, or socket connections
+  if (req.method !== 'GET' || req.url.includes('/api/') || req.url.includes('/socket.io/')) {
+    return;
+  }
+
+  // Network-first for HTML navigation, stale-while-revalidate for static assets
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((networkRes) => {
+          if (networkRes.ok) {
+            const copy = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
+          return networkRes;
+        })
+        .catch(async () => {
+          const cached = await caches.match(req);
+          if (cached) return cached;
+          return caches.match(OFFLINE_URL);
+        })
+    );
+    return;
+  }
+
+  // Static assets (CSS, JS, Fonts, Images)
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      const fetchPromise = fetch(req)
+        .then((networkRes) => {
+          if (networkRes.ok && req.url.startsWith(self.location.origin)) {
+            const copy = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
+          return networkRes;
+        })
+        .catch(() => cached);
+
+      return cached || fetchPromise;
+    })
   );
 });

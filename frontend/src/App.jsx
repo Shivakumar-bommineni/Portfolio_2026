@@ -23,6 +23,7 @@ import TodoBoard from './pages/TodoBoard';
 import BookmarkManager from './pages/BookmarkManager';
 import ProjectTracker from './pages/ProjectTracker';
 import NotificationsPage from './pages/NotificationsPage';
+import PwaInstallPrompt from './components/PwaInstallPrompt';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <BrowserRouter>
             <ForceLogoutListener />
             <NotificationToast />
+            <PwaInstallPrompt />
             <Routes>
               {/* Public portfolio */}
               <Route path="/"               element={<Portfolio />} />

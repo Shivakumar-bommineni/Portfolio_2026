@@ -10,7 +10,7 @@ const sendOTPSMS = async (phone, otp) => {
   const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
   const message = await client.messages.create({
-    body: `Your SecurePay verification code is ${otp}. Valid for 5 minutes. Never share this code.`,
+    body: `Your ShivaKumar_B verification code is ${otp}. Valid for 5 minutes. Never share this code.`,
     from: process.env.TWILIO_PHONE_NUMBER,
     to: phone,
   });

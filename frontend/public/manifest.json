@@ -1,13 +1,21 @@
 {
-  "name": "Shivakumar Dev — Portfolio & Dashboard",
-  "short_name": "shiv_dev",
-  "description": "Shivakumar Bommineni's personal portfolio and developer dashboard",
+  "name": "Shivakumar Bommineni — Portfolio & Developer Hub",
+  "short_name": "ShivaKumar_B",
+  "description": "Shivakumar Bommineni's personal portfolio, projects, and developer workspace",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f1117",
+  "background_color": "#0f172a",
   "theme_color": "#2563eb",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -26,14 +34,20 @@
       "name": "Dashboard",
       "short_name": "Dash",
       "url": "/dashboard",
-      "description": "Open developer dashboard"
+      "description": "Open private developer dashboard"
     },
     {
       "name": "Portfolio",
       "short_name": "Portfolio",
       "url": "/",
-      "description": "View public portfolio"
+      "description": "View developer portfolio & skills"
+    },
+    {
+      "name": "Notes",
+      "short_name": "Notes",
+      "url": "/notes",
+      "description": "Developer notes and snippets"
     }
   ],
-  "categories": ["productivity", "developer"]
+  "categories": ["productivity", "developer", "portfolio"]
 }

@@ -62,13 +62,16 @@ const allowedOrigins = Array.from(
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl)
+    // allow requests with no origin (like mobile apps, curl, or server-to-server)
     if (!origin) return callback(null, true);
     const normalized = origin.replace(/\/+$/, '');
     if (allowedOrigins.some((o) => o.replace(/\/+$/, '') === normalized)) {
       return callback(null, true);
     }
-    return callback(null, true); // permissive fallback
+    if (process.env.NODE_ENV === 'production') {
+      return callback(new Error('Blocked by CORS policy'));
+    }
+    return callback(null, true); // permissive only for local development
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

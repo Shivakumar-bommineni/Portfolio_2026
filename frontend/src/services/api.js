@@ -116,6 +116,7 @@ export const authAPI = {
   revokeSession: (sessionId) => api.delete(`/auth/sessions/${sessionId}`),
   forgotPasswordSendOTP: (phone) => api.post('/auth/forgot-password/send-otp', { phone }),
   resetPassword: (data) => api.post('/auth/forgot-password/reset', data),
+  changePassword: (data) => api.put('/auth/change-password', data),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
 };

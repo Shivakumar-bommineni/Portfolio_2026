@@ -20,7 +20,32 @@ const LOCK_DURATION_MS = 30 * 60 * 1000;    // 30 minutes
 const OTP_EXPIRY_MS = 5 * 60 * 1000;         // 5 minutes
 const MAX_OTP_ATTEMPTS = 3;
 const REFRESH_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-const MAX_ACTIVE_SESSIONS = 3;               // MDM Active Session Limit
+const MAX_ACTIVE_SESSIONS = 3;
+
+function resolveClientLocationAndIp(req, clientProvidedLocation) {
+  const rawIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.ip || '127.0.0.1';
+  const ipAddress = typeof rawIp === 'string' ? rawIp.split(',')[0].trim() : '127.0.0.1';
+
+  const vercelCity = req.headers['x-vercel-ip-city'];
+  const vercelRegion = req.headers['x-vercel-ip-country-region'];
+  const vercelCountry = req.headers['x-vercel-ip-country'];
+  const cloudflareCountry = req.headers['cf-ipcountry'];
+
+  let location = clientProvidedLocation;
+  if (!location || location === 'Local Network' || location === 'Unknown Location') {
+    if (vercelCity || vercelCountry) {
+      location = [vercelCity, vercelRegion, vercelCountry].filter(Boolean).join(', ');
+    } else if (cloudflareCountry) {
+      location = cloudflareCountry;
+    } else if (ipAddress === '127.0.0.1' || ipAddress === '::1') {
+      location = 'Localhost (Development)';
+    } else {
+      location = 'Hyderabad, Telangana, India';
+    }
+  }
+
+  return { ipAddress, location };
+}               // MDM Active Session Limit
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -124,8 +149,7 @@ const register = async (req, res) => {
     // Create initial session for registration
     const deviceId = req.body.deviceId || crypto.randomUUID();
     const deviceInfo = req.body.deviceInfo || req.headers['user-agent'] || 'Web Browser';
-    const location = req.body.location || 'Local Network';
-    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+    const { ipAddress, location } = resolveClientLocationAndIp(req, req.body.location);
 
     const sessionResult = await query(
       `INSERT INTO user_sessions (user_id, device_id, device_info, location, ip_address, is_active, is_revoked)
@@ -182,8 +206,7 @@ const login = async (req, res) => {
     // ── MDM / Session Limit Enforcement (Max 3 Devices) ───────────
     const incomingDeviceId = deviceId || crypto.createHash('md5').update(`${req.ip}_${req.headers['user-agent']}`).digest('hex');
     const clientDeviceInfo = deviceInfo || req.headers['user-agent'] || 'Web Browser';
-    const clientLocation   = location || 'Local Network';
-    const ipAddress        = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+    const { ipAddress, location: clientLocation } = resolveClientLocationAndIp(req, location);
 
     // Query active unrevoked sessions
     const { rows: activeSessions } = await query(
@@ -321,8 +344,7 @@ const forceLogoutAndLogin = async (req, res) => {
     // 4. Create new session for this incoming device
     const incomingDeviceId = deviceId || crypto.createHash('md5').update(`${req.ip}_${req.headers['user-agent']}`).digest('hex');
     const clientDeviceInfo = deviceInfo || req.headers['user-agent'] || 'Web Browser';
-    const clientLocation   = location || 'Local Network';
-    const ipAddress        = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+    const { ipAddress, location: clientLocation } = resolveClientLocationAndIp(req, location);
 
     const { rows: newSessionRows } = await query(
       `INSERT INTO user_sessions (user_id, device_id, device_info, location, ip_address, is_active, is_revoked)
@@ -586,6 +608,54 @@ const getMe = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current password and new password are required.' });
+    }
+
+    const userResult = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (!userResult.rows.length) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const user = userResult.rows[0];
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, message: 'New password must be different from your current password.' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [newHash, userId]);
+
+    // Send in-app security notification
+    try {
+      await createAndSendNotification({
+        userId: user.id,
+        title: 'Security Notice: Password Updated',
+        message: 'Your account password was successfully changed from your dashboard session.',
+        type: 'Security',
+        metadata: { action: 'change_password', timestamp: new Date().toISOString() },
+      });
+    } catch {
+      // ignore
+    }
+
+    res.json({ success: true, message: 'Password successfully changed.' });
+  } catch (err) {
+    console.error('changePassword error:', err);
+    res.status(500).json({ success: false, message: 'Failed to update password.' });
+  }
+};
+
 module.exports = {
   sendRegistrationOTP,
   register,
@@ -598,4 +668,5 @@ module.exports = {
   refreshToken,
   logout,
   getMe,
+  changePassword,
 };

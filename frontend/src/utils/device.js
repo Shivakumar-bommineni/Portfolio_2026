@@ -114,14 +114,48 @@ export function getDeviceInfo() {
 }
 
 export async function getUserPinpointLocation() {
+  // 1. Check cached session location in sessionStorage
+  try {
+    const cached = sessionStorage.getItem('shiv_client_geo');
+    if (cached) return cached;
+  } catch (_) {}
+
+  // 2. Fast GeoIP via ipwho.is with 1500ms timeout
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+    const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (data.city || data.region || data.country)) {
+        const parts = [data.city, data.region, data.country].filter(Boolean);
+        if (parts.length > 0) {
+          const locStr = parts.join(', ');
+          try { sessionStorage.setItem('shiv_client_geo', locStr); } catch (_) {}
+          return locStr;
+        }
+      }
+    }
+  } catch (e) {
+    // GeoIP lookup blocked or timed out
+  }
+
+  // 3. Fallback: Parse timezone into human-readable city, state, country
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (tz) {
+      if (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') {
+        return 'Hyderabad, Telangana, India';
+      }
       return tz.replace(/_/g, ' ');
     }
   } catch (e) {
     // ignore
   }
+
   return 'India';
 }
 

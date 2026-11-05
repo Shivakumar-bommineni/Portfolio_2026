@@ -37,6 +37,9 @@ function initSocket(httpServer) {
         if (allowedOrigins.some((o) => o.replace(/\/+$/, '') === normalized)) {
           return callback(null, true);
         }
+        if (process.env.NODE_ENV === 'production') {
+          return callback(new Error('Blocked by CORS policy'));
+        }
         return callback(null, true);
       },
       credentials: true,

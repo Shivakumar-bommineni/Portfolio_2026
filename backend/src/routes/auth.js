@@ -42,7 +42,7 @@ router.post('/login',
 );
 
 // MDM Session Selection & Replacement
-router.post('/sessions/force-logout-and-login', ctrl.forceLogoutAndLogin);
+router.post('/sessions/force-logout-and-login', loginLimiter, ctrl.forceLogoutAndLogin);
 router.get('/sessions', authenticate, ctrl.getActiveSessions);
 router.delete('/sessions/:sessionId', authenticate, ctrl.revokeSession);
 
@@ -62,5 +62,17 @@ router.post('/forgot-password/reset',
 router.post('/refresh', refreshLimiter, ctrl.refreshToken);
 router.post('/logout', authenticate, ctrl.logout);
 router.get('/me', authenticate, ctrl.getMe);
+router.put('/change-password',
+  authenticate,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 8, max: 128 })
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+      .withMessage('New password must include uppercase, lowercase, number, and special character'),
+  ],
+  validate,
+  ctrl.changePassword
+);
 
 module.exports = router;
