@@ -594,13 +594,146 @@ export default function Portfolio() {
           box-shadow: 0 8px 18px -4px rgba(37,99,235,0.22);
         }
 
+        .hero-stats-wrap {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 1rem !important;
+          flex-wrap: wrap !important;
+        }
         .hero-stat-card {
+          flex: 0 0 auto !important;
+          min-width: 125px !important;
+          width: auto !important;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .hero-stat-card:hover {
           transform: translateY(-4px);
           border-color: var(--primary) !important;
           box-shadow: 0 10px 24px -6px rgba(37,99,235,0.25);
+        }
+
+        /* ── Footer ── */
+        .pf-footer-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+        }
+        .pf-footer-brand {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          text-decoration: none;
+          color: inherit;
+          margin-left: 0 !important;
+          padding: 0 !important;
+        }
+        .pf-footer-links {
+          display: flex;
+          align-items: center;
+          gap: 1.75rem;
+          flex-wrap: wrap;
+        }
+        .pf-footer-link {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: .84rem;
+          color: var(--text-muted);
+          font-weight: 600;
+          transition: color .15s;
+          padding: 0;
+        }
+        .pf-footer-link:hover {
+          color: var(--primary);
+        }
+        .pf-footer-social {
+          display: flex;
+          align-items: center;
+          gap: .625rem;
+        }
+        .pf-footer-social-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          border: 1.5px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-muted);
+          text-decoration: none;
+          transition: all .15s;
+          background: var(--surface);
+        }
+        .pf-footer-social-btn:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          transform: translateY(-2px);
+        }
+        .pf-footer-bottom {
+          border-top: 1px solid var(--border);
+          margin-top: 1.75rem;
+          padding-top: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: .75rem;
+          font-size: .75rem;
+          color: var(--text-muted);
+        }
+
+        @media (max-width: 900px) {
+          .hero-stats-wrap {
+            justify-content: center !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .pf-footer-top {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.25rem !important;
+          }
+          .pf-footer-brand {
+            width: 100% !important;
+          }
+          .pf-footer-links {
+            gap: 1.25rem !important;
+            width: 100% !important;
+          }
+          .pf-footer-social {
+            width: 100% !important;
+          }
+          .pf-footer-bottom {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: .5rem !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-stats-wrap {
+            gap: .45rem !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+            flex-wrap: nowrap !important;
+          }
+          .hero-stat-card {
+            min-width: 0 !important;
+            flex: 1 1 calc(33.333% - .35rem) !important;
+            padding: .65rem .4rem !important;
+            text-align: center !important;
+          }
+          .pf-footer-links {
+            gap: 1rem !important;
+          }
+          .pf-footer-link {
+            font-size: .8rem !important;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1044,7 +1177,15 @@ export default function Portfolio() {
               </div>
 
               {/* Stats row with interactive cards */}
-              <div className="hero-stats-wrap">
+              <div
+                className="hero-stats-wrap"
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
                 {[
                   { num: "3+", label: "Years Coding" },
                   { num: "10+", label: "Projects Built" },
@@ -2322,32 +2463,18 @@ export default function Portfolio() {
 
       {/* ─── FOOTER ─── */}
       <footer
+        className="pf-footer"
         style={{
           background: "var(--bg)",
           borderTop: "1px solid var(--border)",
           padding: "2.5rem 0",
         }}
       >
-        <div style={{ maxWidth: 1140, margin: "0 auto", padding: "0 2rem" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "1.25rem",
-            }}
-          >
+        <div className="pf-footer-container" style={{ maxWidth: 1140, margin: "0 auto", padding: "0 2rem" }}>
+          <div className="pf-footer-top">
             <a
               href="#hero"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                textDecoration: "none",
-                color: "inherit",
-              }}
-              className="p-nav-brand"
+              className="p-nav-brand pf-footer-brand"
             >
               <div
                 className="sb-mark"
@@ -2356,11 +2483,12 @@ export default function Portfolio() {
                   height: 42,
                   fontSize: ".9rem",
                   borderRadius: 12,
+                  flexShrink: 0,
                 }}
               >
                 <span className="sb-mark-text">{hero.avatarText || "SB"}</span>
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
                     display: "flex",
@@ -2388,17 +2516,16 @@ export default function Portfolio() {
                   style={{
                     fontSize: ".76rem",
                     color: "var(--text-muted)",
-                    marginTop: ".2rem",
+                    marginTop: ".25rem",
                     fontWeight: 500,
+                    lineHeight: 1.4,
                   }}
                 >
                   {hero.name} · Full Stack Developer · {new Date().getFullYear()}
                 </div>
               </div>
             </a>
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}
-            >
+            <div className="pf-footer-links">
               {[
                 ["About", "about"],
                 ["Skills", "skills"],
@@ -2408,62 +2535,32 @@ export default function Portfolio() {
                 <button
                   key={id}
                   onClick={() => scrollTo(id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    fontSize: ".8rem",
-                    color: "var(--text-muted)",
-                    fontWeight: 600,
-                    transition: "color .15s",
-                  }}
+                  className="pf-footer-link"
                 >
                   {l}
                 </button>
               ))}
             </div>
-            <div style={{ display: "flex", gap: ".625rem" }}>
+            <div className="pf-footer-social">
               {[contact.github, contact.linkedin].map((url, i) => (
                 <a
                   key={i}
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 9,
-                    border: "1.5px solid var(--border)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--text-muted)",
-                    textDecoration: "none",
-                    transition: "all .15s",
-                  }}
+                  className="pf-footer-social-btn"
+                  aria-label={i === 0 ? "GitHub" : "LinkedIn"}
                 >
                   {i === 0 ? <GithubIcon /> : <LinkedInIcon />}
                 </a>
               ))}
             </div>
           </div>
-          <div
-            style={{
-              borderTop: "1px solid var(--border)",
-              marginTop: "1.5rem",
-              paddingTop: "1.25rem",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: ".75rem",
-            }}
-          >
-            <span style={{ fontSize: ".75rem", color: "var(--text-muted)" }}>
+          <div className="pf-footer-bottom">
+            <span>
               © {new Date().getFullYear()} {hero.name}. All rights reserved.
             </span>
-            <span style={{ fontSize: ".75rem", color: "var(--text-muted)" }}>
+            <span>
               Built with React.js + Node.js · Powered by Ollama AI
             </span>
           </div>

@@ -340,6 +340,19 @@ button { font-family: inherit; }
   max-width: 500px; line-height: 1.8; margin-bottom: 2rem;
 }
 .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+.hero-stats-wrap {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+}
+.hero-stat-card {
+  flex: 0 0 auto !important;
+  min-width: 125px !important;
+  width: auto !important;
+}
 .hero-stack { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .hero-stack-label { font-size: .78rem; color: var(--text-muted); margin-right: .25rem; font-weight: 500; }
 .stack-chip {
@@ -514,6 +527,79 @@ button { font-family: inherit; }
 .footer-left { display: flex; align-items: center; gap: .75rem; }
 .footer-copy { font-size: .8rem; color: var(--text-muted); }
 .footer-right { font-size: .8rem; color: var(--text-muted); }
+
+/* ── Portfolio Footer ── */
+.pf-footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+.pf-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  margin-left: 0 !important;
+  padding: 0 !important;
+}
+.pf-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+.pf-footer-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .84rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  transition: color .15s;
+  padding: 0;
+}
+.pf-footer-link:hover {
+  color: var(--primary);
+}
+.pf-footer-social {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+}
+.pf-footer-social-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all .15s;
+  background: var(--surface);
+}
+.pf-footer-social-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+.pf-footer-bottom {
+  border-top: 1px solid var(--border);
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  font-size: .75rem;
+  color: var(--text-muted);
+}
 
 /* ===================================================================
    BUTTONS
@@ -989,6 +1075,31 @@ button { font-family: inherit; }
     gap: 2rem !important;
   }
 
+  /* Portfolio Footer Responsive */
+  .pf-footer-container {
+    padding: 0 1.25rem !important;
+  }
+  .pf-footer-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1.25rem !important;
+  }
+  .pf-footer-brand {
+    width: 100% !important;
+  }
+  .pf-footer-links {
+    gap: 1.25rem !important;
+    width: 100% !important;
+  }
+  .pf-footer-social {
+    width: 100% !important;
+  }
+  .pf-footer-bottom {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: .5rem !important;
+  }
+
   .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 2rem; }
   .hero-avatar-wrap { order: -1; }
   .hero-stack { justify-content: center; }
@@ -1149,12 +1260,19 @@ button { font-family: inherit; }
     gap: .45rem !important;
     width: 100% !important;
     justify-content: space-between !important;
+    flex-wrap: nowrap !important;
   }
   .hero-stat-card {
     min-width: 0 !important;
     flex: 1 1 calc(33.333% - .35rem) !important;
     padding: .65rem .45rem !important;
     text-align: center !important;
+  }
+  .pf-footer-links {
+    gap: 1rem !important;
+  }
+  .pf-footer-link {
+    font-size: .8rem !important;
   }
   .hero-stat-card > div:first-of-type {
     font-size: 1.35rem !important;
