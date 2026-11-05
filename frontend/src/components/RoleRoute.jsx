@@ -4,9 +4,10 @@ import { useAuth } from '../context/AuthContext';
 export const roleHome = () => '/dashboard';
 
 export default function RoleRoute({ roles, children }) {
-  const { user, loading } = useAuth();
+  const { user, isBootstrapping, loading } = useAuth();
 
-  if (loading) {
+  // Auth Bootstrap: wait for server session probe before redirecting
+  if (isBootstrapping || loading) {
     return (
       <div className="full-loader">
         <div className="spinner" />
@@ -15,6 +16,9 @@ export default function RoleRoute({ roles, children }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!roles.includes(user.role)) return <Navigate to={roleHome(user.role)} replace />;
+  if (roles && roles.length > 0 && !roles.includes(user.role)) {
+    return <Navigate to={roleHome(user.role)} replace />;
+  }
+
   return children;
 }

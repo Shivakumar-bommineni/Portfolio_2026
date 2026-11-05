@@ -15,13 +15,20 @@ export const broadcast = (type, payload = {}) => {
   channel?.postMessage({ type, tabId: TAB_ID, ...payload });
 };
 
-// ── Auth cache (localStorage so all tabs can read it) ─────────────────────
+// ── Auth cache (localStorage so all tabs can read non-sensitive user identity) ─────
+// In accordance with Client Portal security architecture:
+// NO TOKENS (accessToken / refreshToken) are ever written to localStorage.
 export const readAuth = () => {
   try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; }
 };
+
 export const writeAuth = (user) => {
-  if (user) localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-  else localStorage.removeItem(AUTH_KEY);
+  if (user) {
+    const { accessToken, token, refreshToken, ...safeUser } = user;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(safeUser));
+  } else {
+    localStorage.removeItem(AUTH_KEY);
+  }
 };
 
 // ── Tab lock (which tab currently owns the session) ───────────────────────

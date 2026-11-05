@@ -14,14 +14,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach Bearer token to all requests for reliable cross-domain authentication
+// Attach Bearer token only if an explicit non-sentinel token is present.
+// In HttpOnly mode (Client Portal architecture), credentials automatically ride on withCredentials.
 api.interceptors.request.use((config) => {
   try {
     const raw = localStorage.getItem('shiv_auth_user');
     if (raw) {
       const user = JSON.parse(raw);
       const token = user?.accessToken || user?.token;
-      if (token && !config.headers.Authorization) {
+      if (token && token !== 'httponly-session' && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -45,6 +46,12 @@ api.interceptors.response.use(
     const original = error.config;
     const errCode = error.response?.data?.code || error.response?.data?.error;
 
+    // suppressAuthExpiry: a probe call during bootstrap or initial load
+    // should not trigger force logout or session expired modals
+    if (original?.suppressAuthExpiry) {
+      return Promise.reject(error);
+    }
+
     // Check for explicit session revocation by MDM limit displacement
     if (error.response?.status === 401 && errCode === 'SESSION-REVOKED') {
       window.dispatchEvent(
@@ -57,11 +64,11 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (
-      error.response?.status === 401 &&
-      errCode === 'TOKEN_EXPIRED' &&
-      !original._retry
-    ) {
+    // Auth-excluded endpoints (don't attempt refresh loop on login/logout/refresh itself)
+    const url = original?.url || '';
+    const isAuthExclude = url.includes('/auth/login') || url.includes('/auth/logout') || url.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !original._retry && !isAuthExclude) {
       if (isRefreshing) {
         return new Promise((resolve, reject) =>
           failedQueue.push({ resolve, reject })
@@ -69,40 +76,30 @@ api.interceptors.response.use(
           .then(() => api(original))
           .catch((e) => Promise.reject(e));
       }
+
       original._retry = true;
       isRefreshing = true;
-      try {
-        let refreshToken = null;
-        try {
-          const raw = localStorage.getItem('shiv_auth_user');
-          if (raw) refreshToken = JSON.parse(raw)?.refreshToken;
-        } catch {
-          // ignore
-        }
 
-        const res = await api.post('/auth/refresh', { refreshToken });
-        if (res.data?.user) {
-          try {
-            const raw = localStorage.getItem('shiv_auth_user');
-            const prev = raw ? JSON.parse(raw) : {};
-            localStorage.setItem('shiv_auth_user', JSON.stringify({ ...prev, ...res.data.user }));
-          } catch {
-            // ignore
-          }
-          if (res.data.user.accessToken) {
-            original.headers.Authorization = `Bearer ${res.data.user.accessToken}`;
-          }
-        }
+      try {
+        // HttpOnly refresh cookie is automatically transmitted via withCredentials: true
+        await api.post('/auth/refresh');
         processQueue(null);
         return api(original);
       } catch (e) {
         processQueue(e);
-        window.location.href = '/login';
+        window.dispatchEvent(
+          new CustomEvent('app:force-logout', {
+            detail: {
+              reason: 'Session expired. Please log in again.',
+            },
+          })
+        );
         return Promise.reject(e);
       } finally {
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
@@ -117,8 +114,9 @@ export const authAPI = {
   forgotPasswordSendOTP: (phone) => api.post('/auth/forgot-password/send-otp', { phone }),
   resetPassword: (data) => api.post('/auth/forgot-password/reset', data),
   changePassword: (data) => api.put('/auth/change-password', data),
+  refreshToken: (config = {}) => api.post('/auth/refresh', {}, config),
   logout: () => api.post('/auth/logout'),
-  getMe: () => api.get('/auth/me'),
+  getMe: (config = {}) => api.get('/auth/me', config),
 };
 
 export const superAdminAPI = {

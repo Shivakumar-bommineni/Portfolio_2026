@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, isBootstrapping, loading } = useAuth();
 
   // Push history entry so browser back button stays on protected pages
   useEffect(() => {
@@ -14,7 +14,8 @@ export default function ProtectedRoute({ children }) {
     return () => window.removeEventListener('popstate', block);
   }, [user]);
 
-  if (loading) {
+  // Auth Bootstrap: while probing /api/auth/me with HttpOnly cookies, show loader
+  if (isBootstrapping || loading) {
     return (
       <div className="full-loader">
         <div className="spinner" />
