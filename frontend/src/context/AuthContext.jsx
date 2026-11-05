@@ -9,10 +9,7 @@ import {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => {
-    const auth = readAuth();
-    return auth?.accessToken || auth?.token || (cookie.get('session_hint') ? 'httponly-session' : null);
-  });
+  const [token, setToken] = useState(() => (cookie.get('session_hint') ? 'httponly-session' : null));
   const [user, setUser] = useState(() => readAuth());
   const [isBootstrapping, setIsBootstrapping] = useState(() => !readAuth() && !!cookie.get('session_hint'));
   const loggingOutRef = useRef(false);
@@ -24,10 +21,12 @@ export function AuthProvider({ children }) {
     // ignore
   }
 
-  // ── Production Auth Bootstrap (Token & Cookie Verification) ───────────
-  // Dual-delivery: supports both HttpOnly cookies and Bearer tokens for cross-domain stability.
-  // On reload, if a session_hint cookie exists, we probe /api/auth/me.
-  // If valid, state is restored. If expired, silent refresh is attempted with refreshToken.
+  // ── Production Auth Bootstrap (HttpOnly Cookie Verification) ───────────
+  // Tokens live exclusively in HttpOnly cookies in production for XSS defense.
+  // JavaScript never reads the raw token from localStorage. On reload, if a session_hint cookie exists,
+  // we probe /api/auth/me using withCredentials (browser automatically carries the 1st-party HttpOnly cookie).
+  // If valid, state is restored with the sentinel 'httponly-session'.
+  // If expired, silent refresh is attempted via withCredentials before deciding user is logged out.
   useEffect(() => {
     if (!cookie.get('session_hint')) {
       setIsBootstrapping(false);
@@ -50,7 +49,7 @@ export function AuthProvider({ children }) {
             throw probeErr;
           }
 
-          // Access token expired; attempt silent refresh with refresh token or HttpOnly cookie
+          // Access token expired; attempt silent refresh with 1st-party HttpOnly cookie
           const refreshRes = await authAPI.refreshToken({ suppressAuthExpiry: true });
           if (refreshRes?.data?.user) {
             writeAuth(refreshRes.data.user);
@@ -60,17 +59,10 @@ export function AuthProvider({ children }) {
 
         if (cancelled || !res?.data?.user) return;
         const fetchedUser = res.data.user;
-        const currentSaved = readAuth() || {};
-        const fullUser = {
-          ...currentSaved,
-          ...fetchedUser,
-          accessToken: fetchedUser.accessToken || currentSaved.accessToken,
-          refreshToken: fetchedUser.refreshToken || currentSaved.refreshToken,
-        };
 
-        setToken(fullUser.accessToken || 'httponly-session');
-        setUser(fullUser);
-        writeAuth(fullUser);
+        setToken('httponly-session');
+        setUser(fetchedUser);
+        writeAuth(fetchedUser);
       } catch (err) {
         // Genuinely not logged in or session expired
         cookie.remove('session_hint');
@@ -106,7 +98,7 @@ export function AuthProvider({ children }) {
       if (data.type === 'LOGIN') {
         if (data.user) {
           cookie.set('session_hint', '1', { days: 30 });
-          setToken(data.user.accessToken || data.user.token || 'httponly-session');
+          setToken('httponly-session');
           setUser(data.user);
           writeAuth(data.user);
         }
@@ -128,7 +120,7 @@ export function AuthProvider({ children }) {
           try {
             const u = JSON.parse(e.newValue);
             setUser(u);
-            setToken(u.accessToken || u.token || 'httponly-session');
+            setToken('httponly-session');
           } catch (err) {
             // ignore
           }
@@ -142,8 +134,7 @@ export function AuthProvider({ children }) {
   // ── Public auth API ──────────────────────────────────────────────────────
   const login = (userData) => {
     cookie.set('session_hint', '1', { days: 30 });
-    const tokenVal = userData?.accessToken || userData?.token || 'httponly-session';
-    setToken(tokenVal);
+    setToken('httponly-session');
     setUser(userData);
     writeAuth(userData);
     broadcast('LOGIN', { user: userData });

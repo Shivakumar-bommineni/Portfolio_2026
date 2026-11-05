@@ -601,6 +601,7 @@ const getMe = async (req, res) => {
         isPhoneVerified: u.is_phone_verified,
         createdAt: u.created_at,
         sessionId: req.user.sessionId || null,
+        accessToken: req.token || null,
       },
     });
   } catch (err) {

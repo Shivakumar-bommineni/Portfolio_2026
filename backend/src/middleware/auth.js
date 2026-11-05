@@ -40,6 +40,7 @@ const authenticate = async (req, res, next) => {
     }
 
     req.user = decoded;
+    req.token = token;
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

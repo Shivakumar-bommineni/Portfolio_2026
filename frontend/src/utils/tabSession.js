@@ -15,16 +15,18 @@ export const broadcast = (type, payload = {}) => {
   channel?.postMessage({ type, tabId: TAB_ID, ...payload });
 };
 
-// ── Auth cache (localStorage so all tabs can read user session & tokens) ─────
-// Dual-mode security: stores user payload and tokens for cross-domain Authorization header
-// (e.g. Vercel frontend to Render backend where third-party cookies are blocked by browsers)
+// ── Auth cache (localStorage so all tabs can read safe user identity) ─────────
+// In accordance with Client Portal security architecture:
+// ZERO TOKENS (accessToken / refreshToken) are ever written to localStorage.
+// All tokens live exclusively in HttpOnly cookies and temporary JavaScript memory.
 export const readAuth = () => {
   try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; }
 };
 
 export const writeAuth = (user) => {
   if (user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    const { accessToken, token, refreshToken, ...safeUser } = user;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(safeUser));
   } else {
     localStorage.removeItem(AUTH_KEY);
   }

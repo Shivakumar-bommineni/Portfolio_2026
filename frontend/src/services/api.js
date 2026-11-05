@@ -1,16 +1,18 @@
 import axios from 'axios';
 
-const defaultBackendUrl = import.meta.env.PROD
-  ? 'https://portfolio-2026-arz2.onrender.com'
-  : '';
+// In production, we route through Vercel's reverse proxy (/api) on the same origin.
+// In development, Vite server proxy proxies /api to http://localhost:5000.
+// This guarantees same-origin 1st-party cookies without 3rd-party blocking or tokens in localStorage.
+const apiBaseUrl = '/api';
 
-export const BACKEND_URL = (import.meta.env.VITE_API_URL || defaultBackendUrl).replace(/\/+$/, '');
-const apiBaseUrl = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+export const BACKEND_URL = import.meta.env.PROD
+  ? ''
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
 
 const api = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
-  timeout: 12000,
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -84,27 +86,19 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        let refreshToken = null;
-        try {
-          const raw = localStorage.getItem('shiv_auth_user');
-          if (raw) {
-            const user = JSON.parse(raw);
-            refreshToken = user?.refreshToken;
-          }
-        } catch (e) {}
-
-        // Dual delivery: sends HttpOnly refresh cookie via withCredentials AND refreshToken body
-        const res = await api.post('/auth/refresh', { refreshToken });
+        // 1st-party HttpOnly refresh cookie is automatically transmitted via withCredentials: true
+        const res = await api.post('/auth/refresh');
         const newToken = res.data?.user?.accessToken;
 
         if (res.data?.user) {
+          const { accessToken, token: t, refreshToken, ...safeUser } = res.data.user;
           const existingRaw = localStorage.getItem('shiv_auth_user');
           const existing = existingRaw ? JSON.parse(existingRaw) : {};
-          const merged = { ...existing, ...res.data.user };
+          const merged = { ...existing, ...safeUser };
           localStorage.setItem('shiv_auth_user', JSON.stringify(merged));
         }
 
-        if (newToken) {
+        if (newToken && !original.headers.Authorization) {
           original.headers.Authorization = `Bearer ${newToken}`;
         }
 
@@ -139,14 +133,7 @@ export const authAPI = {
   forgotPasswordSendOTP: (phone) => api.post('/auth/forgot-password/send-otp', { phone }),
   resetPassword: (data) => api.post('/auth/forgot-password/reset', data),
   changePassword: (data) => api.put('/auth/change-password', data),
-  refreshToken: (config = {}) => {
-    let refreshToken = null;
-    try {
-      const raw = localStorage.getItem('shiv_auth_user');
-      if (raw) refreshToken = JSON.parse(raw)?.refreshToken;
-    } catch (e) {}
-    return api.post('/auth/refresh', { refreshToken }, config);
-  },
+  refreshToken: (config = {}) => api.post('/auth/refresh', {}, config),
   logout: () => api.post('/auth/logout'),
   getMe: (config = {}) => api.get('/auth/me', config),
 };
