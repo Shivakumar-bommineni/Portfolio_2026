@@ -582,10 +582,7 @@ export default function Portfolio() {
               </span>
             </div>
           </a>
-          <div
-            className="p-nav-links"
-            style={{ display: "flex", gap: "1.75rem" }}
-          >
+          <div className="p-nav-links">
             {[
               ["About", "about"],
               ["Skills", "skills"],
@@ -771,24 +768,8 @@ export default function Portfolio() {
           }}
         />
 
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            maxWidth: 1140,
-            margin: "0 auto",
-            padding: "4.5rem 2rem",
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              alignItems: "center",
-              gap: "4rem",
-            }}
-          >
+        <div className="pf-hero-container">
+          <div className="pf-hero-grid">
             {/* Left Column */}
             <div className="pf-hero-left">
               {/* Status badge */}
@@ -956,14 +937,7 @@ export default function Portfolio() {
               </p>
 
               {/* CTAs */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: ".875rem",
-                  flexWrap: "wrap",
-                  marginBottom: "2.5rem",
-                }}
-              >
+              <div className="hero-ctas">
                 <button
                   className="btn btn-primary"
                   onClick={() => scrollTo("projects")}
@@ -997,7 +971,7 @@ export default function Portfolio() {
               </div>
 
               {/* Stats row with interactive cards */}
-              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <div className="hero-stats-wrap">
                 {[
                   { num: "3+", label: "Years Coding" },
                   { num: "10+", label: "Projects Built" },
@@ -1078,6 +1052,7 @@ export default function Portfolio() {
 
                 {/* Floating Satellite Chip 1 (Top Left): "⚡ Fast & Scalable" */}
                 <div
+                  className="satellite-chip satellite-chip-1"
                   style={{
                     position: "absolute",
                     top: -16,
@@ -1104,6 +1079,7 @@ export default function Portfolio() {
 
                 {/* Floating Satellite Chip 2 (Bottom Left): "🔐 JWT & RBAC" */}
                 <div
+                  className="satellite-chip satellite-chip-2"
                   style={{
                     position: "absolute",
                     bottom: 24,
@@ -1130,7 +1106,7 @@ export default function Portfolio() {
 
                 {/* The SB Card Itself */}
                 <div
-                  className="edge-beam-card"
+                  className="edge-beam-card edge-beam-card-avatar"
                   style={{
                     width: 250,
                     height: 250,
@@ -1203,6 +1179,7 @@ export default function Portfolio() {
                     />
                   ) : (
                     <div
+                      className="sb-avatar-text"
                       style={{
                         fontSize: "5.5rem",
                         fontWeight: 950,
@@ -1390,14 +1367,7 @@ export default function Portfolio() {
               and user experience.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "4rem",
-              alignItems: "start",
-            }}
-          >
+          <div className="pf-about-grid">
             <div>
               {about.paragraphs.map((p, i) => (
                 <p
@@ -1413,14 +1383,7 @@ export default function Portfolio() {
                 </p>
               ))}
               {/* Mini stats */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1rem",
-                  marginTop: "1.5rem",
-                }}
-              >
+              <div className="pf-about-mini-stats">
                 {[
                   {
                     icon: "📍",
@@ -1595,13 +1558,7 @@ export default function Portfolio() {
                     }}
                   />
                 </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-                    gap: "1rem",
-                  }}
-                >
+                <div className="pf-skills-subgrid">
                   {catSkills.map((s) => (
                     <div
                       key={s.name}
@@ -1946,13 +1903,7 @@ export default function Portfolio() {
               Selected projects showcasing my skills in full stack development.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill,minmax(330px,1fr))",
-              gap: "1.5rem",
-            }}
-          >
+          <div className="pf-projects-grid">
             {projects.map((p, i) => (
               <div
                 key={i}
@@ -2127,14 +2078,7 @@ export default function Portfolio() {
               discussions.
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "3rem",
-              alignItems: "start",
-            }}
-          >
+          <div className="pf-contact-grid">
             {/* Info */}
             <div>
               {/* CTA banner */}
