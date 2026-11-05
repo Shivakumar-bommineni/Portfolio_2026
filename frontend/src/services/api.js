@@ -35,8 +35,8 @@ api.interceptors.request.use((config) => {
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error) => {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve()));
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
   failedQueue = [];
 };
 
@@ -73,7 +73,10 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) =>
           failedQueue.push({ resolve, reject })
         )
-          .then(() => api(original))
+          .then((token) => {
+            if (token) original.headers.Authorization = `Bearer ${token}`;
+            return api(original);
+          })
           .catch((e) => Promise.reject(e));
       }
 
@@ -81,12 +84,34 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // HttpOnly refresh cookie is automatically transmitted via withCredentials: true
-        await api.post('/auth/refresh');
-        processQueue(null);
+        let refreshToken = null;
+        try {
+          const raw = localStorage.getItem('shiv_auth_user');
+          if (raw) {
+            const user = JSON.parse(raw);
+            refreshToken = user?.refreshToken;
+          }
+        } catch (e) {}
+
+        // Dual delivery: sends HttpOnly refresh cookie via withCredentials AND refreshToken body
+        const res = await api.post('/auth/refresh', { refreshToken });
+        const newToken = res.data?.user?.accessToken;
+
+        if (res.data?.user) {
+          const existingRaw = localStorage.getItem('shiv_auth_user');
+          const existing = existingRaw ? JSON.parse(existingRaw) : {};
+          const merged = { ...existing, ...res.data.user };
+          localStorage.setItem('shiv_auth_user', JSON.stringify(merged));
+        }
+
+        if (newToken) {
+          original.headers.Authorization = `Bearer ${newToken}`;
+        }
+
+        processQueue(null, newToken);
         return api(original);
       } catch (e) {
-        processQueue(e);
+        processQueue(e, null);
         window.dispatchEvent(
           new CustomEvent('app:force-logout', {
             detail: {
@@ -114,7 +139,14 @@ export const authAPI = {
   forgotPasswordSendOTP: (phone) => api.post('/auth/forgot-password/send-otp', { phone }),
   resetPassword: (data) => api.post('/auth/forgot-password/reset', data),
   changePassword: (data) => api.put('/auth/change-password', data),
-  refreshToken: (config = {}) => api.post('/auth/refresh', {}, config),
+  refreshToken: (config = {}) => {
+    let refreshToken = null;
+    try {
+      const raw = localStorage.getItem('shiv_auth_user');
+      if (raw) refreshToken = JSON.parse(raw)?.refreshToken;
+    } catch (e) {}
+    return api.post('/auth/refresh', { refreshToken }, config);
+  },
   logout: () => api.post('/auth/logout'),
   getMe: (config = {}) => api.get('/auth/me', config),
 };

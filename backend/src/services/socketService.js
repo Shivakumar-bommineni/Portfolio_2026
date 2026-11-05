@@ -50,7 +50,10 @@ function initSocket(httpServer) {
 
   // JWT Authentication Middleware
   io.use((socket, next) => {
-    const rawAuth = socket.handshake.auth?.token || socket.handshake.headers?.authorization;
+    const rawAuth =
+      socket.handshake.auth?.token ||
+      socket.handshake.query?.token ||
+      socket.handshake.headers?.authorization;
     let token = rawAuth;
     if (token && token.startsWith('Bearer ')) {
       token = token.slice(7);

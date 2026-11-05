@@ -9,7 +9,10 @@ import {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => (cookie.get('session_hint') ? 'httponly-session' : null));
+  const [token, setToken] = useState(() => {
+    const auth = readAuth();
+    return auth?.accessToken || auth?.token || (cookie.get('session_hint') ? 'httponly-session' : null);
+  });
   const [user, setUser] = useState(() => readAuth());
   const [isBootstrapping, setIsBootstrapping] = useState(() => !readAuth() && !!cookie.get('session_hint'));
   const loggingOutRef = useRef(false);
@@ -21,12 +24,10 @@ export function AuthProvider({ children }) {
     // ignore
   }
 
-  // ── Production Auth Bootstrap (HttpOnly Cookie Verification) ───────────
-  // Tokens live exclusively in HttpOnly cookies in production for XSS defense.
-  // JavaScript never reads the raw token. On reload, if a session_hint cookie exists,
-  // we probe /api/auth/me using withCredentials (browser automatically carries the HttpOnly cookie).
-  // If valid, state is restored with the sentinel 'httponly-session'.
-  // If expired, silent refresh is attempted before deciding user is logged out.
+  // ── Production Auth Bootstrap (Token & Cookie Verification) ───────────
+  // Dual-delivery: supports both HttpOnly cookies and Bearer tokens for cross-domain stability.
+  // On reload, if a session_hint cookie exists, we probe /api/auth/me.
+  // If valid, state is restored. If expired, silent refresh is attempted with refreshToken.
   useEffect(() => {
     if (!cookie.get('session_hint')) {
       setIsBootstrapping(false);
@@ -49,17 +50,27 @@ export function AuthProvider({ children }) {
             throw probeErr;
           }
 
-          // Access token expired; attempt silent refresh with HttpOnly refresh cookie
-          await authAPI.refreshToken({ suppressAuthExpiry: true });
+          // Access token expired; attempt silent refresh with refresh token or HttpOnly cookie
+          const refreshRes = await authAPI.refreshToken({ suppressAuthExpiry: true });
+          if (refreshRes?.data?.user) {
+            writeAuth(refreshRes.data.user);
+          }
           res = await authAPI.getMe({ suppressAuthExpiry: true });
         }
 
         if (cancelled || !res?.data?.user) return;
         const fetchedUser = res.data.user;
+        const currentSaved = readAuth() || {};
+        const fullUser = {
+          ...currentSaved,
+          ...fetchedUser,
+          accessToken: fetchedUser.accessToken || currentSaved.accessToken,
+          refreshToken: fetchedUser.refreshToken || currentSaved.refreshToken,
+        };
 
-        setToken('httponly-session');
-        setUser(fetchedUser);
-        writeAuth(fetchedUser);
+        setToken(fullUser.accessToken || 'httponly-session');
+        setUser(fullUser);
+        writeAuth(fullUser);
       } catch (err) {
         // Genuinely not logged in or session expired
         cookie.remove('session_hint');
@@ -95,7 +106,7 @@ export function AuthProvider({ children }) {
       if (data.type === 'LOGIN') {
         if (data.user) {
           cookie.set('session_hint', '1', { days: 30 });
-          setToken('httponly-session');
+          setToken(data.user.accessToken || data.user.token || 'httponly-session');
           setUser(data.user);
           writeAuth(data.user);
         }
@@ -117,7 +128,7 @@ export function AuthProvider({ children }) {
           try {
             const u = JSON.parse(e.newValue);
             setUser(u);
-            setToken('httponly-session');
+            setToken(u.accessToken || u.token || 'httponly-session');
           } catch (err) {
             // ignore
           }
@@ -131,12 +142,11 @@ export function AuthProvider({ children }) {
   // ── Public auth API ──────────────────────────────────────────────────────
   const login = (userData) => {
     cookie.set('session_hint', '1', { days: 30 });
-    setToken('httponly-session');
-    // Strip raw tokens: in production, tokens are strictly HttpOnly cookies and must never reside in localStorage!
-    const { accessToken, token: t, refreshToken, ...safeUser } = userData || {};
-    setUser(safeUser);
-    writeAuth(safeUser);
-    broadcast('LOGIN', { user: safeUser });
+    const tokenVal = userData?.accessToken || userData?.token || 'httponly-session';
+    setToken(tokenVal);
+    setUser(userData);
+    writeAuth(userData);
+    broadcast('LOGIN', { user: userData });
   };
 
   const logout = async (skipApi = false) => {
