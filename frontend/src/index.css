@@ -209,7 +209,7 @@ button { font-family: inherit; }
 .p-nav-link:hover { background: var(--surface-alt); color: var(--text); }
 .p-nav-actions { display: flex; align-items: center; gap: .75rem; margin-left: 1rem; }
 .p-mobile-menu-btn {
-  display: none;
+  display: none !important;
   align-items: center;
   justify-content: center;
   width: 38px;

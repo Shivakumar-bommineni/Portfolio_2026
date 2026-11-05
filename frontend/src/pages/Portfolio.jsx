@@ -366,6 +366,15 @@ export default function Portfolio() {
         .nav-link-underline:hover { color: var(--primary) !important; }
         .nav-link-underline:hover::after { transform: scaleX(1); transform-origin: bottom left; }
 
+        .p-mobile-menu-btn {
+          display: none !important;
+        }
+        @media (max-width: 900px) {
+          .p-mobile-menu-btn {
+            display: flex !important;
+          }
+        }
+
         .btn-hero-outline:hover { border-color:var(--primary)!important; background:var(--primary-lt)!important; color:var(--primary)!important; }
         .social-btn-v2:hover { border-color:var(--primary)!important; color:var(--primary)!important; transform:translateY(-3px)!important; }
         .highlight-card-v2:hover { border-color:var(--primary)!important; transform:translateY(-3px)!important; }
