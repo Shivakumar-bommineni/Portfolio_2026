@@ -375,6 +375,70 @@ export default function Portfolio() {
           }
         }
 
+        /* ── Portfolio Layout (Desktop Base & Responsive) ── */
+        .pf-hero-container {
+          position: relative;
+          z-index: 1;
+          max-width: 1140px;
+          margin: 0 auto;
+          padding: 4.5rem 2rem;
+          width: 100%;
+        }
+        .pf-hero-grid {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          gap: 4rem;
+          width: 100%;
+        }
+        .pf-about-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4rem;
+          align-items: start;
+        }
+        .pf-about-mini-stats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+        .pf-skills-subgrid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+          gap: 1rem;
+        }
+        .pf-projects-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+          gap: 1.5rem;
+        }
+        .pf-contact-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 3rem;
+          align-items: start;
+        }
+
+        @media (max-width: 900px) {
+          .pf-hero-container {
+            padding: 2.25rem 1rem 3.5rem 1rem !important;
+          }
+          .pf-hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2.75rem !important;
+            text-align: center !important;
+          }
+          .pf-about-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+          .pf-contact-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+        }
+
         .btn-hero-outline:hover { border-color:var(--primary)!important; background:var(--primary-lt)!important; color:var(--primary)!important; }
         .social-btn-v2:hover { border-color:var(--primary)!important; color:var(--primary)!important; transform:translateY(-3px)!important; }
         .highlight-card-v2:hover { border-color:var(--primary)!important; transform:translateY(-3px)!important; }
