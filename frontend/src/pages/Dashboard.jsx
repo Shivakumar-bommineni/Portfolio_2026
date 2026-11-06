@@ -578,7 +578,7 @@ export default function Dashboard() {
         const [nr, ir, pr] = await Promise.all([notesAPI.getAll(), interviewAPI.getAll(), portfolioAPI.get()]);
         const notes = nr.data.notes || [];
         const iq = ir.data.questions || [];
-        const projects = pr.data.portfolio?.projects || [];
+        const projects = pr.data.config?.projects || pr.data.portfolio?.projects || [];
         setStats({ notes: notes.length, total_iq: iq.length, mastered: iq.filter((q) => q.is_mastered).length, projects: projects.length });
       } catch { /* silently fail */ }
     };
