@@ -37,6 +37,7 @@ export default function App() {
             <Routes>
               {/* Public portfolio */}
               <Route path="/"               element={<Portfolio />} />
+              <Route path="/advanced"       element={<Portfolio />} />
               <Route path="/login"          element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="/register"       element={<Navigate to="/" replace />} />
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />

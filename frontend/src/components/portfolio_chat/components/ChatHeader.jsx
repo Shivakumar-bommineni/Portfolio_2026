@@ -1,30 +1,41 @@
 import React from 'react';
 
-export default function ChatHeader({ online, messagesCount, onClear, onClose }) {
+export default function ChatHeader({ online, messagesCount, onClear, onClose, isCyber = false }) {
   return (
     <div style={{
       padding: '1rem 1.125rem .875rem',
-      background: 'linear-gradient(135deg,#1e3a5f,#2d1b69)',
+      background: isCyber
+        ? 'linear-gradient(135deg, #16101c, #2a0b16)'
+        : 'linear-gradient(135deg,#1e3a5f,#2d1b69)',
+      borderBottom: isCyber ? '1px solid rgba(255, 46, 91, 0.3)' : 'none',
       display: 'flex', alignItems: 'center', gap: '.75rem',
+      fontFamily: isCyber ? "'JetBrains Mono', monospace" : 'inherit',
     }}>
       <div style={{
         width: 40, height: 40, borderRadius: 12,
-        background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+        background: isCyber
+          ? 'linear-gradient(135deg, #ff2e5b, #960f2d)'
+          : 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+        boxShadow: isCyber ? '0 0 15px rgba(255, 46, 91, 0.5)' : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '.85rem', fontWeight: 900, color: '#fff', flexShrink: 0,
       }}>SB</div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 800, fontSize: '.9rem', color: '#fff', lineHeight: 1.3 }}>
-          Shivakumar's AI
+        <div style={{
+          fontWeight: 800, fontSize: '.9rem', color: '#fff', lineHeight: 1.3,
+          letterSpacing: isCyber ? '0.5px' : 'normal',
+        }}>
+          {isCyber ? "// SHIVAKUMAR_AI" : "Shivakumar's AI"}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '.375rem', marginTop: '.1rem' }}>
           <span style={{
             width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
             background: online ? '#34d399' : '#f87171',
+            boxShadow: online ? '0 0 8px #34d399' : 'none',
           }} />
-          <span style={{ fontSize: '.7rem', color: 'rgba(255,255,255,.65)', fontWeight: 500 }}>
-            {online === null ? 'Connecting…' : online ? 'Online · llama3.2' : 'Offline · Start Ollama'}
+          <span style={{ fontSize: '.7rem', color: isCyber ? '#ff4d76' : 'rgba(255,255,255,.65)', fontWeight: 600 }}>
+            {online === null ? 'Connecting…' : online ? (isCyber ? 'AI ASSISTANT ONLINE' : 'Online · llama3.2') : 'Offline · Start Ollama'}
           </span>
         </div>
       </div>

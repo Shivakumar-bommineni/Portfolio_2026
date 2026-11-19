@@ -11,6 +11,7 @@ export default function Navbar({
   mobileNavOpen,
   setMobileNavOpen,
   scrollTo,
+  onSwitchToAdvanced,
 }) {
   return (
     <nav
@@ -84,6 +85,30 @@ export default function Navbar({
           ))}
         </div>
         <div className="p-nav-actions">
+          {onSwitchToAdvanced && (
+            <button
+              onClick={onSwitchToAdvanced}
+              style={{
+                background: "linear-gradient(135deg, #ff2e5b, #b51239)",
+                border: "none",
+                color: "#ffffff",
+                padding: "6px 14px",
+                borderRadius: "999px",
+                fontSize: ".75rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 0 12px rgba(255, 46, 91, 0.4)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                fontFamily: "inherit",
+              }}
+              title="Switch to 3D Spotlight Mode"
+            >
+              <span>⚡</span>
+              <span>3D Spotlight</span>
+            </button>
+          )}
           <button className="theme-btn" onClick={toggle} title="Toggle theme">
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
@@ -153,6 +178,28 @@ export default function Navbar({
               {l}
             </button>
           ))}
+          {onSwitchToAdvanced && (
+            <button
+              onClick={() => {
+                onSwitchToAdvanced();
+                setMobileNavOpen(false);
+              }}
+              style={{
+                background: "linear-gradient(135deg, #ff2e5b, #b51239)",
+                border: "none",
+                color: "#ffffff",
+                padding: "10px",
+                borderRadius: "8px",
+                fontSize: ".85rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                textAlign: "center",
+                marginTop: "6px",
+              }}
+            >
+              ⚡ Switch to 3D Spotlight Mode
+            </button>
+          )}
           <button
             className="btn btn-primary"
             style={{ width: "100%", marginTop: ".5rem", padding: ".75rem" }}
